@@ -1,0 +1,54 @@
+{
+  "Clusters": {
+    "ClusterId": "id",
+    "Destinations": {
+      "first_destination": {
+        "Address": "https://contoso.com"
+      },
+      "another_destination": {
+        "Address": "https://10.20.30.40",
+        "Health": "https://10.20.30.40:12345/test"
+      }
+    },
+    "LoadBalancingPolicy": "PowerOfTwoChoices",
+    "SessionAffinity": {
+      "Enabled": true,
+      "Policy": "Cookie",
+      "FailurePolicy": "Redistribute",
+      "Settings": {
+        "CustomHeaderName": "MySessionHeaderName"
+      }
+    },
+    "HealthCheck": {
+      "Active": {
+        "Enabled": "true",
+        "Interval": "00:00:10",
+        "Timeout": "00:00:10",
+        "Policy": "ConsecutiveFailures",
+        "Path": "/api/health"
+      },
+      "Passive": {
+        "Enabled": true,
+        "Policy": "TransportFailureRateHealthPolicy",
+        "ReactivationPeriod": "00:00:10"
+      }
+    },
+    "HttpClient": {
+      "SSLProtocols": "Tls13",
+      "DangerousAcceptAnyServerCertificate": false,
+      "MaxConnectionsPerServer": 1024,
+      "EnableMultipleHttp2Connections": true,
+      "RequestHeaderEncoding": "Latin1"
+    },
+    "HttpRequest": {
+      "ActivityTimeout": "00:02:00",
+      "Version": "2",
+      "VersionPolicy": "RequestVersionOrLower",
+      "AllowResponseBuffering": "false"
+    },
+    "MetaData": {
+      "TransportFailureRateHealthPolicy.RateLimit": "0.5",
+      "MyKey": "MyValue"
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "Routes": {
+    "RouteId": "routeId",
+    "ClusterId": "allclusterprops",
+    "Order": 100,
+    "MaxRequestBodySize": 1000000,
+    "Authorization Policy": "Anonymous",
+    "CorsPolicy": "Default",
+    "Match": {
+      "Path": "/something/{**remainder}",
+      "Hosts": [
+        "www.aaaaa.com",
+        "www.bbbbb.com"
+      ],
+      "Methods": [
+        "GET",
+        "PUT"
+      ],
+      "Headers": [
+        {
+          "Name": "MyCustomHeader",
+          "Values": [
+            "value1",
+            "value2",
+            "another value"
+          ],
+          "Mode": "ExactHeader",
+          "IsCaseSensitive": true
+        }
+      ],
+      "QueryParameters": [
+        {
+          "Name": "MyQueryParameter",
+          "Values": [
+            "value1",
+            "value2",
+            "another value"
+          ],
+          "Mode": "Exact",
+          "IsCaseSensitive": true
+        }
+      ]
+    },
+    "MetaData": {
+      "MyName": "MyValue"
+    },
+    "Transforms": [
+      {
+        "RequestHeader": "MyHeader",
+        "Set": "MyValue"
+      }
+    ]
+  }
+}

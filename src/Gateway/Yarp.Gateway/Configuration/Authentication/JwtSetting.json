@@ -1,0 +1,8 @@
+﻿{
+  "JwtAuth": {
+    "ClientId": "",
+    "ClientSecret": "",
+    "Authority": "https://opid.mydomain.com.tw",
+    "Audience": ""
+  }
+}

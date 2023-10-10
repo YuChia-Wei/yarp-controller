@@ -1,0 +1,11 @@
+﻿{
+  "OpidAuth": {
+    "ClientId": "",
+    "ClientSecret": "",
+    "Authority": "https://opid.mydomain.com.tw",
+    "WebApiAudience": [],
+    "LoginCookieName": "local_login",
+    "LoginCookieDomain": "localhost",
+    "TicketStoreRedisServerUrl": ""
+  }
+}

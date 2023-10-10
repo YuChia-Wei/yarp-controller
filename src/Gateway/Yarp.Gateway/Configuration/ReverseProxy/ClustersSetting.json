@@ -1,0 +1,13 @@
+{
+  "ReverseProxy": {
+    "Clusters": {
+      "default-cluster": {
+        "Destinations": {
+          "first_destination": {
+            "Address": "https://www.mydomain.com.tw/"
+          }
+        }
+      }
+    }
+  }
+}
