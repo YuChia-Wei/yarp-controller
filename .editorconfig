@@ -1,4 +1,6 @@
 # ref: https://github.com/dotnet/roslyn/blob/main/.editorconfig
+# ref: https://github.com/dotnet/roslyn-analyzers/blob/main/.editorconfig
+# ref: https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/code-style-rule-options
 
 # 如果要從更高的目錄繼承 .editorconfig 設定，請移除 root 設定
 root = true
@@ -10,6 +12,9 @@ root = true
 indent_style = space
 
 # (Please don't specify an indent_size here; that has too many unintended consequences.)
+
+# 拼字檢查
+# https://learn.microsoft.com/zh-tw/visualstudio/ide/text-spell-checker?view=vs-2022
 spelling_exclusion_path = SpellingExclusions.dic
 
 # 檔案儲存
@@ -47,25 +52,9 @@ indent_size = 2
 [*.{yaml,yml}]
 indent_size = 2
 
-# .net style
+### Dotnet code style settings ###
+
 [*.{cs,vb}]
-
-#### 編譯設定 ####
-# ref: https://stackoverflow.com/questions/66470838/msbuild-treat-warnings-from-editorconfig-as-errors-enforce-during-build
-# ref: https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/suppress-warnings
-# dotnet_analyzer_diagnostic.severity = warning
-# dotnet_diagnostic.IDE0052.severity = error
-
-# IDE0161: Convert to file-scoped namespace
-dotnet_diagnostic.IDE0161.severity = warning
-
-# RCS1036: Remove unnecessary blank line.
-dotnet_diagnostic.RCS1036.severity = warning
-
-# IDE0060: Remove unused parameter
-dotnet_diagnostic.IDE0060.severity = warning
-
-#### .NET 編碼慣例 ####
 
 # 組合管理 Using
 dotnet_separate_import_directive_groups = false
@@ -78,17 +67,26 @@ dotnet_style_qualification_for_method = true:warning
 dotnet_style_qualification_for_property = true:warning
 
 # 語言關鍵字與 BCL 類型喜好設定
-dotnet_style_predefined_type_for_locals_parameters_members = true:silent
-dotnet_style_predefined_type_for_member_access = true:silent
+# Use language keywords instead of framework type names for type references
+dotnet_style_predefined_type_for_locals_parameters_members = true:warning
+dotnet_style_predefined_type_for_member_access = true:warning
 
 # 括號喜好設定
+# Parentheses preferences
 dotnet_style_parentheses_in_arithmetic_binary_operators = always_for_clarity:silent
 dotnet_style_parentheses_in_other_binary_operators = always_for_clarity:silent
-dotnet_style_parentheses_in_relational_binary_operators = always_for_clarity:silent
 dotnet_style_parentheses_in_other_operators = never_if_unnecessary:silent
+dotnet_style_parentheses_in_relational_binary_operators = always_for_clarity:silent
 
 # 修飾元喜好設定
-dotnet_style_require_accessibility_modifiers = for_non_interface_members:silent
+# Modifier preferences
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:warning
+
+# Field preferences
+dotnet_style_readonly_field = true:warning
+
+# Parameter preferences
+dotnet_code_quality_unused_parameters = all:warning
 
 # Suggest more modern language features when available
 dotnet_style_coalesce_expression = true:suggestion
@@ -106,21 +104,11 @@ dotnet_style_prefer_inferred_anonymous_type_member_names = true:suggestion
 dotnet_style_prefer_inferred_tuple_names = true:warning
 dotnet_style_prefer_is_null_check_over_reference_equality_method = true:suggestion
 
-# 欄位喜好設定
-dotnet_style_readonly_field = true:suggestion
-
-# 參數喜好設定
-dotnet_code_quality_unused_parameters = all:suggestion
-
 # 其它 .net 開發相關定義
-dotnet_style_operator_placement_when_wrapping = beginning_of_line
 dotnet_style_prefer_simplified_boolean_expressions = true:suggestion
 dotnet_style_prefer_simplified_interpolation = true:suggestion
-dotnet_style_namespace_match_folder = true:suggestion
-
-# Whitespace options
-dotnet_style_allow_multiple_blank_lines_experimental = false:warning
-dotnet_style_allow_statement_immediately_after_block_experimental = true:silent
+dotnet_style_namespace_match_folder = true:warning
+dotnet_style_operator_placement_when_wrapping = beginning_of_line
 
 #### 命名規則 ####
 
@@ -188,6 +176,16 @@ dotnet_naming_symbols.constants.required_modifiers = const
 
 dotnet_naming_style.constant_style.capitalization = pascal_case
 
+# Instance fields are camelCase and start with _
+dotnet_naming_rule.instance_fields_should_be_camel_case.severity = suggestion
+dotnet_naming_rule.instance_fields_should_be_camel_case.symbols = instance_fields
+dotnet_naming_rule.instance_fields_should_be_camel_case.style = instance_field_style
+
+dotnet_naming_symbols.instance_fields.applicable_kinds = field
+
+dotnet_naming_style.instance_field_style.capitalization = camel_case
+dotnet_naming_style.instance_field_style.required_prefix = _
+
 # Locals and parameters are camelCase
 dotnet_naming_rule.locals_should_be_camel_case.severity = suggestion
 dotnet_naming_rule.locals_should_be_camel_case.symbols = locals_and_parameters
@@ -215,27 +213,12 @@ dotnet_naming_symbols.all_members.applicable_kinds = *
 
 dotnet_naming_style.pascal_case_style.capitalization = pascal_case
 
-# C# 專用設定
+### CSharp code style settings ###
+
 [*.cs]
 
 #### C# 格式化規則 ####
-
-# 新行喜好設定
-csharp_new_line_before_open_brace = all
-csharp_new_line_before_else = true
-csharp_new_line_before_catch = true
-csharp_new_line_before_finally = true
-csharp_new_line_before_members_in_object_initializers = true
-csharp_new_line_before_members_in_anonymous_types = true
-csharp_new_line_between_query_expression_clauses = true
-
-# 縮排喜好設定
-csharp_indent_block_contents = true
-csharp_indent_braces = false
-csharp_indent_case_contents = true
-csharp_indent_case_contents_when_block = true
-csharp_indent_switch_labels = true
-csharp_indent_labels = one_less_than_current
+#### C# Coding Conventions ####
 
 # var 喜好設定
 csharp_style_var_elsewhere = true:warning
@@ -257,15 +240,38 @@ csharp_style_expression_bodied_accessors = true:suggestion
 
 # 模式比對喜好設定
 # Suggest more modern language features when available
-csharp_style_pattern_matching_over_as_with_null_check = true:warning
-csharp_style_pattern_matching_over_is_with_cast_check = true:warning
+csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
+csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
 csharp_style_inlined_variable_declaration = true:suggestion
 csharp_style_throw_expression = true:suggestion
-csharp_style_conditional_delegate_call = true:suggestion
-csharp_style_prefer_extended_property_pattern = true:suggestion
 csharp_style_prefer_switch_expression = true:suggestion
 
+# Null-checking preferences
+csharp_style_conditional_delegate_call = true:suggestion
+
+#### C# Formatting Rules ####
+
+# 新行喜好設定
+# New line preferences
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_new_line_before_members_in_object_initializers = true
+csharp_new_line_before_members_in_anonymous_types = true
+csharp_new_line_between_query_expression_clauses = true
+
+# 縮排喜好設定
+# Indentation preferences
+csharp_indent_block_contents = true
+csharp_indent_braces = false
+csharp_indent_case_contents = true
+csharp_indent_case_contents_when_block = true
+csharp_indent_switch_labels = true
+csharp_indent_labels = one_less_than_current
+
 # 空格喜好設定
+# Space preferences
 csharp_space_after_cast = false
 csharp_space_after_colon_in_inheritance_clause = true
 csharp_space_after_comma = true
@@ -290,12 +296,13 @@ csharp_space_between_parentheses = false
 csharp_space_between_square_brackets = false
 
 # 程式碼區塊喜好設定
-csharp_prefer_braces = true:warning
-csharp_prefer_simple_using_statement = true:suggestion
+# Code-block preferences
+csharp_prefer_braces = when_multiline:warning
+csharp_prefer_simple_using_statement = true:warning
 
 # 換行喜好設定
-csharp_preserve_single_line_blocks = false
-csharp_preserve_single_line_statements = false
+csharp_preserve_single_line_blocks = true
+csharp_preserve_single_line_statements = true
 
 #### C# 程式語法偏好 ####
 csharp_style_prefer_method_group_conversion = true:silent
@@ -309,8 +316,6 @@ csharp_style_prefer_utf8_string_literals = true:suggestion
 csharp_style_prefer_readonly_struct = true:suggestion
 csharp_style_prefer_readonly_struct_member = true:suggestion
 csharp_style_allow_embedded_statements_on_same_line_experimental = true:silent
-csharp_style_allow_blank_lines_between_consecutive_braces_experimental = true:silent
-csharp_style_allow_blank_line_after_colon_in_constructor_initializer_experimental = true:silent
 csharp_style_allow_blank_line_after_token_in_conditional_expression_experimental = true:silent
 csharp_style_allow_blank_line_after_token_in_arrow_expression_clause_experimental = true:silent
 csharp_style_prefer_pattern_matching = true:silent
@@ -318,10 +323,12 @@ csharp_style_prefer_not_pattern = true:suggestion
 csharp_style_prefer_extended_property_pattern = true:suggestion
 
 # 修飾元喜好設定
+# Modifier preferences
 csharp_prefer_static_local_function = true:suggestion
 csharp_preferred_modifier_order = public, private, protected, internal, static, extern, new, virtual, abstract, sealed, override, readonly, unsafe, volatile, async
 
 # 運算式層級喜好設定
+# Expression-level preferences
 csharp_prefer_simple_default_expression = true:warning
 csharp_style_deconstructed_variable_declaration = true:suggestion
 csharp_style_pattern_local_over_anonymous_function = true:suggestion
@@ -335,3 +342,62 @@ csharp_using_directive_placement = outside_namespace:silent
 
 # file scope namespace
 csharp_style_namespace_declarations = file_scoped:warning
+
+### Configuration for IDE code style by diagnostic IDs ###
+[*.{cs,vb}]
+
+# IDE2000: Allow multiple blank lines
+dotnet_style_allow_multiple_blank_lines_experimental = false
+
+# IDE2001: Embedded statements must be on their own line
+csharp_style_allow_embedded_statements_on_same_line_experimental = false
+
+# IDE2002: Consecutive braces must not have blank line between them
+csharp_style_allow_blank_lines_between_consecutive_braces_experimental = false
+
+# IDE2003: Blank line required between block and subsequent statement
+dotnet_style_allow_statement_immediately_after_block_experimental = false
+
+# IDE2004: Blank line not allowed after constructor initializer colon
+csharp_style_allow_blank_line_after_colon_in_constructor_initializer_experimental = false
+
+#### 編譯設定 ####
+# ref: https://stackoverflow.com/questions/66470838/msbuild-treat-warnings-from-editorconfig-as-errors-enforce-during-build
+# ref: https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/suppress-warnings
+# dotnet_analyzer_diagnostic.severity = warning
+# dotnet_diagnostic.IDE0052.severity = error
+
+# IDE0060: Remove unused parameter
+dotnet_diagnostic.IDE0060.severity = warning
+
+# IDE0161: Convert to file-scoped namespace
+dotnet_diagnostic.IDE0161.severity = warning
+
+# RCS1036: Remove unnecessary blank line.
+dotnet_diagnostic.RCS1036.severity = waring
+
+### Configuration for .Net analyzers executed on this repo ###
+[*.{cs,vb}]
+
+# Default analyzed API surface = 'all' (public APIs + non-public APIs)
+dotnet_code_quality.api_surface = all
+
+# Restrict the analyzed API surface for certain analyzers to 'public' (public APIs only).
+# CA1043: Use integral or string argument for indexers
+dotnet_code_quality.CA1043.api_surface = public
+
+# CA1707: Identifiers should not contain underscores
+dotnet_code_quality.CA1707.api_surface = public
+
+# CA1720: Identifiers should not contain type names
+dotnet_code_quality.CA1720.api_surface = public
+
+# Exclude single letter type parameter names
+# CA1715: Identifiers should have correct prefix
+dotnet_code_quality.CA1715.exclude_single_letter_type_parameters = true
+
+# CA1305: Pass IFormatProvider - https://github.com/dotnet/roslyn-analyzers/issues/6379
+dotnet_diagnostic.CA1305.severity = suggestion
+
+# CA1851: Possible multiple enumerations of 'IEnumerable' collection - https://github.com/dotnet/roslyn-analyzers/issues/6379
+dotnet_diagnostic.CA1851.severity = suggestion
