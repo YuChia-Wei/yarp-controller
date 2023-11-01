@@ -1,9 +1,9 @@
-﻿FROM mcr.microsoft.com/dotnet/aspnet:7.0-bullseye-slim AS base
+﻿FROM ghcr.io/yuchia-wei/otel-dotnet-auto-instrumentation:7.0-booworm-slim AS base
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 
-FROM mcr.microsoft.com/dotnet/sdk:7.0-bullseye-slim AS build
+FROM mcr.microsoft.com/dotnet/sdk:7.0-booworm-slim AS build
 ARG BuildConfiguration=Debug
 WORKDIR /src
 COPY ["nuget.config", "."]
