@@ -28,6 +28,58 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yarp.ControlPlant.Infra", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yarp.ControlPlant.Persistence.Pgsql", "src\ControlPlant\Yarp.ControlPlant.Persistence.Pgsql\Yarp.ControlPlant.Persistence.Pgsql.csproj", "{E06CAF2D-1A3F-494D-A713-58E559062829}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docker", "docker", "{E6E0E7AA-C746-496F-AEAD-6CC096095187}"
+	ProjectSection(SolutionItems) = preProject
+		docker\docker-compose.yaml = docker\docker-compose.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "env-file", "env-file", "{5FDF7D3A-593C-4603-8932-F85F1DA90253}"
+	ProjectSection(SolutionItems) = preProject
+		docker\env-file\yarp-gateway-otel.env = docker\env-file\yarp-gateway-otel.env
+		docker\env-file\yarp-controller-webapi-otel.env = docker\env-file\yarp-controller-webapi-otel.env
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "gateway-config", "gateway-config", "{31D2B14C-A203-40E3-9FD1-BAF4144BB09B}"
+	ProjectSection(SolutionItems) = preProject
+		docker\gateway-config\ReverseProxy-RoutesSetting.json = docker\gateway-config\ReverseProxy-RoutesSetting.json
+		docker\gateway-config\ReverseProxy-ClustersSetting.json = docker\gateway-config\ReverseProxy-ClustersSetting.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "otel-config", "otel-config", "{4D1E2B2A-B1EE-46C4-89EC-CF5A74F952FE}"
+	ProjectSection(SolutionItems) = preProject
+		docker\otel-config\otel-collector-contrib-config.yaml = docker\otel-config\otel-collector-contrib-config.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "grafana-config", "grafana-config", "{48927DFA-DB50-4004-B581-9310FB243EA5}"
+	ProjectSection(SolutionItems) = preProject
+		docker\grafana-config\loki-local.yaml = docker\grafana-config\loki-local.yaml
+		docker\grafana-config\prometheus.yaml = docker\grafana-config\prometheus.yaml
+		docker\grafana-config\tempo.yaml = docker\grafana-config\tempo.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dashboards", "dashboards", "{CF60F71F-CD1B-4002-BD3F-FDA7C5FF579C}"
+	ProjectSection(SolutionItems) = preProject
+		docker\grafana-config\dashboards\logs-app.json = docker\grafana-config\dashboards\logs-app.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sql", "sql", "{8269AB4A-5BC5-4861-BDC8-50B47F377EF4}"
+	ProjectSection(SolutionItems) = preProject
+		docker\sql\fill_tables.sql = docker\sql\fill_tables.sql
+		docker\sql\create_tables.sql = docker\sql\create_tables.sql
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "provisioning", "provisioning", "{7D0F0197-463B-43EE-99C3-AB4D70A21AB2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dashboards", "dashboards", "{BFD3FBA2-3436-41CC-8CB1-2FEB16F7F140}"
+	ProjectSection(SolutionItems) = preProject
+		docker\grafana-config\provisioning\dashboards\dashboards.yaml = docker\grafana-config\provisioning\dashboards\dashboards.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "datasources", "datasources", "{B898BB36-056D-4508-8D6B-334D870B2F24}"
+	ProjectSection(SolutionItems) = preProject
+		docker\grafana-config\provisioning\datasources\datasources.yaml = docker\grafana-config\provisioning\datasources\datasources.yaml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,5 +125,14 @@ Global
 		{F6DC5676-D666-43C3-9B6E-B5E575DD69C5} = {614D3B05-A8FF-4861-A0E8-092A254FB106}
 		{E06CAF2D-1A3F-494D-A713-58E559062829} = {614D3B05-A8FF-4861-A0E8-092A254FB106}
 		{9FB5D1DB-18F6-4998-8157-BE652128CE58} = {614D3B05-A8FF-4861-A0E8-092A254FB106}
+		{5FDF7D3A-593C-4603-8932-F85F1DA90253} = {E6E0E7AA-C746-496F-AEAD-6CC096095187}
+		{31D2B14C-A203-40E3-9FD1-BAF4144BB09B} = {E6E0E7AA-C746-496F-AEAD-6CC096095187}
+		{4D1E2B2A-B1EE-46C4-89EC-CF5A74F952FE} = {E6E0E7AA-C746-496F-AEAD-6CC096095187}
+		{48927DFA-DB50-4004-B581-9310FB243EA5} = {E6E0E7AA-C746-496F-AEAD-6CC096095187}
+		{CF60F71F-CD1B-4002-BD3F-FDA7C5FF579C} = {48927DFA-DB50-4004-B581-9310FB243EA5}
+		{8269AB4A-5BC5-4861-BDC8-50B47F377EF4} = {E6E0E7AA-C746-496F-AEAD-6CC096095187}
+		{7D0F0197-463B-43EE-99C3-AB4D70A21AB2} = {48927DFA-DB50-4004-B581-9310FB243EA5}
+		{BFD3FBA2-3436-41CC-8CB1-2FEB16F7F140} = {7D0F0197-463B-43EE-99C3-AB4D70A21AB2}
+		{B898BB36-056D-4508-8D6B-334D870B2F24} = {7D0F0197-463B-43EE-99C3-AB4D70A21AB2}
 	EndGlobalSection
 EndGlobal
