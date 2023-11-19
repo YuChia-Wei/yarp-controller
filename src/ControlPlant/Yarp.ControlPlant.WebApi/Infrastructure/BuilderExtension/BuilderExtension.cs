@@ -1,4 +1,3 @@
-using Asp.Versioning.ApiExplorer;
 using Yarp.ControlPlant.WebApi.Infrastructure.Options;
 
 namespace Yarp.ControlPlant.WebApi.Infrastructure.BuilderExtension;
@@ -16,16 +15,10 @@ public static class BuilderExtension
     public static void UseSwaggerRoute(this IApplicationBuilder app,
                                        AuthOptions authOptions)
     {
-        var provider = app.ApplicationServices.GetRequiredService<IApiVersionDescriptionProvider>();
         app.UseSwagger();
         app.UseSwaggerUI(options =>
         {
-            foreach (var description in provider.ApiVersionDescriptions)
-            {
-                options.SwaggerEndpoint(
-                    $"{description.GroupName}/swagger.json", $"{AppDomain.CurrentDomain.FriendlyName} {description.GroupName}");
-            }
-
+            options.SwaggerEndpoint($"/swagger.json", $"{AppDomain.CurrentDomain.FriendlyName}");
             options.OAuthClientId(authOptions.ClientId);
             options.OAuthClientSecret(authOptions.ClientSecret);
             options.OAuthScopeSeparator(" ");
@@ -34,12 +27,9 @@ public static class BuilderExtension
 
         app.UseReDoc(options =>
         {
-            foreach (var description in provider.ApiVersionDescriptions)
-            {
-                options.SpecUrl($"/swagger/{description.GroupName}/swagger.json");
-                options.RoutePrefix = $"redoc";
-                options.DocumentTitle = $"{AppDomain.CurrentDomain.FriendlyName} {description.GroupName}";
-            }
+            options.SpecUrl($"/swagger.json");
+            options.RoutePrefix = $"redoc";
+            options.DocumentTitle = $"{AppDomain.CurrentDomain.FriendlyName}";
         });
     }
 }

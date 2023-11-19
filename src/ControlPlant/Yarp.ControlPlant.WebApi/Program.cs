@@ -1,5 +1,3 @@
-using Asp.Versioning;
-using Asp.Versioning.Conventions;
 using Yarp.ControlPlant.UseCase.Port.Input.Cluster;
 using Yarp.ControlPlant.UseCase.Port.Input.Route;
 using Yarp.ControlPlant.UseCase.Port.Output.Cluster;
@@ -20,19 +18,6 @@ builder.Services.AddScoped<IClusterExistChecker, ClusterExistChecker>();
 builder.Services.AddMediator(o => o.ServiceLifetime = ServiceLifetime.Scoped);
 
 builder.Services.AddHealthChecks();
-
-builder.Services.AddApiVersioning(options =>
-       {
-           options.ReportApiVersions = true;
-           options.AssumeDefaultVersionWhenUnspecified = true;
-           options.DefaultApiVersion = new ApiVersion(1, 0);
-       })
-       .AddMvc(options => options.Conventions.Add(new VersionByNamespaceConvention()))
-       .AddApiExplorer(options =>
-       {
-           options.GroupNameFormat = "'v'VVV";
-           options.SubstituteApiVersionInUrl = true;
-       });
 
 builder.Services.AddSwaggerSetting(authOptions);
 
