@@ -1,9 +1,9 @@
-﻿FROM ghcr.io/yuchia-wei/otel-dotnet-auto-instrumentation:7.0-alpine AS base
+﻿FROM ghcr.io/yuchia-wei/otel-dotnet-auto-instrumentation:8.0-alpine AS base
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 
-FROM mcr.microsoft.com/dotnet/sdk:7.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 ARG BuildConfiguration=Debug
 WORKDIR /src
 COPY ["nuget.config", "."]
