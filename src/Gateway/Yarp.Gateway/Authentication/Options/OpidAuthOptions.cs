@@ -25,11 +25,6 @@ public class OpidAuthOptions
     public IEnumerable<string> WebApiAudience { get; set; }
 
     /// <summary>
-    /// Redis Ticket Store Server Url
-    /// </summary>
-    public string CookieTicketStoreRedisServerUrl { get; set; } = string.Empty;
-
-    /// <summary>
     /// Cookies 的名稱
     /// </summary>
     public string CookieLoginName { get; set; }
@@ -48,4 +43,14 @@ public class OpidAuthOptions
     /// Cookie Same Site Mode (default is Lex)
     /// </summary>
     public SameSiteMode CookieSameSiteMode { get; set; } = SameSiteMode.Lax;
+
+    /// <summary>
+    /// ticket store redis server url
+    /// </summary>
+    public string TicketStoreRedisServer { get; set; }
+
+    /// <summary>
+    /// 登入的服務名稱
+    /// </summary>
+    public string LoginApplicationName { get; set; }
 }

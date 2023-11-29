@@ -5,8 +5,10 @@ using IdentityModel.Client;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
+using StackExchange.Redis;
 using Yarp.Gateway.Authentication.Options;
 
 namespace Yarp.Gateway.Authentication.OpenIdConnect;
@@ -21,13 +23,17 @@ public static class AuthenticationBuilderExtension
     /// </summary>
     /// <param name="builder">IServiceCollection</param>
     /// <param name="authOptions">OpidAuthOptions</param>
-    /// <param name="cookieTicketStoreRedisServerUrl"></param>
-    public static AuthenticationBuilder AddOpenIdConnectWithCookie(
-        this AuthenticationBuilder builder,
-        OpidAuthOptions authOptions,
-        string cookieTicketStoreRedisServerUrl)
+    public static AuthenticationBuilder AddOpenIdConnectWithCookie(this AuthenticationBuilder builder,
+                                                                   OpidAuthOptions authOptions)
     {
-        var applicationName = Environment.GetEnvironmentVariable("ApplicationName") ?? AppDomain.CurrentDomain.FriendlyName;
+        // Cookie OAuth 會需要設定 HA Server 時的外部資料儲存來源
+        // 在 Cookie Auth 區塊有設定 SessionStore 的狀況下，這個設定無效 (via. https://github.com/dotnet/AspNetCore.Docs/issues/21163 )
+        // ref: https://learn.microsoft.com/en-us/aspnet/core/security/cookie-sharing?view=aspnetcore-7.0#share-authentication-cookies-with-aspnet-core-identity
+        builder.Services
+               .AddDataProtection()
+               .PersistKeysToStackExchangeRedis(ConnectionMultiplexer.Connect(authOptions.TicketStoreRedisServer),
+                                                $"{authOptions.LoginApplicationName}:LoginCookies:")
+               .SetApplicationName(authOptions.LoginApplicationName);
 
         // cookies auth via.https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-7.0
         builder.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
@@ -38,15 +44,21 @@ public static class AuthenticationBuilderExtension
 
                    // options.Cookie.SecurePolicy = CookieSecurePolicy.None;
                    options.Cookie.SecurePolicy = authOptions.CookieSecurePolicy;
-                   options.Cookie.Domain = authOptions.CookieLoginDomain;
 
-                   options.SessionStore = new RedisCacheTicketStore($"{applicationName}:LoginSession:", cookieTicketStoreRedisServerUrl);
+                   //如果有設定 cookie domain (要共用登入資訊) 的話，再指定 domain，不然哪個網址進入就存哪邊
+                   if (!string.IsNullOrEmpty(authOptions.CookieLoginDomain))
+                   {
+                       options.Cookie.Domain = authOptions.CookieLoginDomain;
+                   }
+
+                   options.SessionStore =
+                       new RedisCacheTicketStore($"{authOptions.LoginApplicationName}:LoginSession:", authOptions.TicketStoreRedisServer);
 
                    options.Events = new CookieAuthenticationEvents
                    {
                        OnValidatePrincipal = async cookieContext =>
                        {
-                           // Console.WriteLine("CookieAuthenticationEvents - OnValidatePrincipal");
+                           var logger = cookieContext.HttpContext.RequestServices.GetRequiredService<ILogger<CookieAuthenticationEvents>>();
 
                            /*
                             * cookieContext.Properties.GetTokenValue(key)
@@ -57,9 +69,16 @@ public static class AuthenticationBuilderExtension
                             * 3. refresh_token
                             * 4. token_type
                             * 5. expires_at     = access_token 的到期日
+                            * 對應 OpenIdConnect 的參數物件
+                            * OpenIdConnectParameterNames.AccessToken
+                            * OpenIdConnectParameterNames.IdToken
+                            * OpenIdConnectParameterNames.RefreshToken
+                            * OpenIdConnectParameterNames.TokenType
+                            *
+                            * expires_at 的部分在 OpenIdConnectParameterNames 無對應
                             *
                             * cookieContext.Properties.IssuedUtc = 跟 OAuth Server 進行驗證的時間
-                            * 
+                            *
                             * cookieContext.Properties.ExpiresUtc
                             *   * cookies 有效期的時間
                             *   * 如果 AddOpenIdConnect 裡面有設定 UseTokenLifeTime 的話，這個時間會使用 id_token 的過期時間
@@ -77,9 +96,19 @@ public static class AuthenticationBuilderExtension
 
                            if (timeRemaining < refreshThreshold)
                            {
-                               // Console.WriteLine("CookieAuthenticationEvents - OnValidatePrincipal - refresh");
+                               logger.LogTrace("OnValidatePrincipal - should be refresh token");
 
-                               var refreshToken = cookieContext.Properties.GetTokenValue("refresh_token");
+                               var refreshToken = cookieContext.Properties.GetTokenValue(OpenIdConnectParameterNames.RefreshToken);
+
+                               if (refreshToken is null)
+                               {
+                                   logger.LogWarning("OnValidatePrincipal - Refresh Token Not Found!");
+
+                                   cookieContext.RejectPrincipal();
+                                   await cookieContext.HttpContext.SignOutAsync().ConfigureAwait(false);
+                                   //登出後強制中斷事件，讓 .net 回去走登入流程
+                                   return;
+                               }
 
                                var httpClient = cookieContext.HttpContext.RequestServices.GetRequiredService<IHttpClientFactory>().CreateClient();
                                var response = await httpClient.RequestRefreshTokenAsync(
@@ -88,29 +117,31 @@ public static class AuthenticationBuilderExtension
                                                       Address = $"{authOptions.Authority}/connect/token",
                                                       ClientId = authOptions.ClientId,
                                                       ClientSecret = authOptions.ClientSecret,
-                                                      RefreshToken = refreshToken
-                                                  });
+                                                      RefreshToken = refreshToken!
+                                                  }).ConfigureAwait(false);
 
-                               if (!response.IsError)
+                               //如果 refresh 錯誤就登出且強制中斷事件
+                               if (response.IsError)
                                {
-                                   var expiresInSeconds = response.ExpiresIn;
-                                   var updatedExpiresAt = DateTimeOffset.UtcNow.AddSeconds(expiresInSeconds);
+                                   logger.LogWarning("OnValidatePrincipal - Token Refresh Error!");
 
-                                   cookieContext.Properties.UpdateTokenValue("expires_at", updatedExpiresAt.ToString());
-
-                                   cookieContext.Properties.UpdateTokenValue("access_token", response.AccessToken);
-                                   cookieContext.Properties.UpdateTokenValue("refresh_token", response.RefreshToken);
-                                   cookieContext.Properties.UpdateTokenValue("id_token", response.IdentityToken);
-
-                                   // Indicate to the cookie middleware that the cookie should be
-                                   // remade (since we have updated it)
-                                   cookieContext.ShouldRenew = true;
-                               }
-                               else
-                               {
                                    cookieContext.RejectPrincipal();
-                                   await cookieContext.HttpContext.SignOutAsync();
+                                   await cookieContext.HttpContext.SignOutAsync().ConfigureAwait(false);
+                                   return;
                                }
+
+                               //can ref OpenIdConnectHandler
+                               var expiresInSeconds = response.ExpiresIn;
+                               var updatedExpiresAt = DateTimeOffset.UtcNow.AddSeconds(expiresInSeconds);
+
+                               cookieContext.Properties.UpdateTokenValue("expires_at", updatedExpiresAt.ToString());
+                               cookieContext.Properties.UpdateTokenValue(OpenIdConnectParameterNames.AccessToken, response.AccessToken);
+                               cookieContext.Properties.UpdateTokenValue(OpenIdConnectParameterNames.RefreshToken, response.RefreshToken);
+                               cookieContext.Properties.UpdateTokenValue(OpenIdConnectParameterNames.IdToken, response.IdentityToken);
+
+                               // Indicate to the cookie middleware that the cookie should be
+                               // remade (since we have updated it)
+                               cookieContext.ShouldRenew = true;
                            }
                        }
                    };
@@ -185,7 +216,7 @@ public static class AuthenticationBuilderExtension
                    };
 
                    // OpenIdConnect 套件預設 PKCE = True
-                   // options.UsePkce = false; 
+                   // options.UsePkce = false;
                });
         return builder;
     }
