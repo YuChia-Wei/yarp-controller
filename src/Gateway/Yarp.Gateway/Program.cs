@@ -34,8 +34,6 @@ builder.Services.AddHealthChecks();
 //         loggingOptions.LoggingFields = HttpLoggingFields.All;
 //     });
 
-var gatewayName = Environment.GetEnvironmentVariable("GatewayName") ?? AppDomain.CurrentDomain.FriendlyName;
-
 builder.Services.AddW3CLogging(logging =>
 {
     // Log all W3C fields
@@ -44,7 +42,7 @@ builder.Services.AddW3CLogging(logging =>
     logging.FileSizeLimit = 5 * 1024 * 1024;
     logging.RetainedFileCountLimit = 2;
 
-    logging.FileName = $"{gatewayName}_{machineName}_";
+    logging.FileName = $"{machineName}_";
     logging.FlushInterval = TimeSpan.FromSeconds(2);
 
     logging.AdditionalRequestHeaders.Add("x-forwarded-for");
