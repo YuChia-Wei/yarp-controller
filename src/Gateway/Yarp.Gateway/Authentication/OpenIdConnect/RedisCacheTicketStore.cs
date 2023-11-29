@@ -14,9 +14,9 @@ public class RedisCacheTicketStore : ITicketStore
     private readonly IDistributedCache _distributedCache;
     private readonly string _redisMainKey;
 
-    public RedisCacheTicketStore(string mainKey, string authOptionsCookieTicketStoreRedisServerUrl)
+    public RedisCacheTicketStore(string mainKey, string redisServerUrl)
     {
-        this._distributedCache = new RedisCache(new RedisCacheOptions { Configuration = authOptionsCookieTicketStoreRedisServerUrl });
+        this._distributedCache = new RedisCache(new RedisCacheOptions { Configuration = redisServerUrl });
         this._redisMainKey = mainKey;
     }
 

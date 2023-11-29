@@ -4,8 +4,9 @@
     "ClientSecret": "",
     "Authority": "https://opid.mydomain.com.tw",
     "WebApiAudience": [],
+    "LoginApplicationName": "",
     "LoginCookieName": "local_login",
-    "LoginCookieDomain": "localhost",
-    "TicketStoreRedisServerUrl": ""
+    "LoginCookieDomain": "",
+    "TicketStoreRedisServer": ""
   }
 }
