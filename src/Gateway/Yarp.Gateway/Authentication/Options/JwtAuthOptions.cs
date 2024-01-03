@@ -11,17 +11,6 @@ public class JwtAuthOptions
     public string Authority { get; set; }
 
     /// <summary>
-    /// ClientId
-    /// </summary>
-    public string ClientId { get; set; }
-
-    /// <summary>
-    /// Gets or sets the client secret.
-    /// </summary>
-    /// <value>The client secret.</value>
-    public string ClientSecret { get; set; }
-
-    /// <summary>
     /// Gets or sets the audience.
     /// </summary>
     /// <value>The audience.</value>
@@ -31,4 +20,6 @@ public class JwtAuthOptions
     /// 需要 HttpsMetadata
     /// </summary>
     public bool RequireHttpsMetadata { get; set; }
+
+    public bool IsSettled { get; set; } = true;
 }

@@ -1,8 +1,9 @@
 ﻿{
-  "JwtAuth": {
-    "ClientId": "",
-    "ClientSecret": "",
-    "Authority": "https://opid.mydomain.com.tw",
-    "Audience": ""
+  "GatewayAuthSetting": {
+    "Jwt": {
+      "Authority": "http://localhost:8080",
+      "Audience": "",
+      "RequireHttpsMetadata": true
+    }
   }
 }

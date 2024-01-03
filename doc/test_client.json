@@ -1,0 +1,142 @@
+{
+  "clientId": "test_client",
+  "name": "openId test client",
+  "description": "",
+  "rootUrl": "",
+  "adminUrl": "",
+  "baseUrl": "",
+  "surrogateAuthRequired": false,
+  "enabled": true,
+  "alwaysDisplayInConsole": true,
+  "clientAuthenticatorType": "client-secret",
+  "secret": "6ZyOGaalxmk0NIZCg9w81lIU9bxnDL4P",
+  "redirectUris": [
+    "http://localhost:4430/signin-oidc"
+  ],
+  "webOrigins": [
+    "/*"
+  ],
+  "notBefore": 0,
+  "bearerOnly": false,
+  "consentRequired": false,
+  "standardFlowEnabled": true,
+  "implicitFlowEnabled": false,
+  "directAccessGrantsEnabled": true,
+  "serviceAccountsEnabled": true,
+  "authorizationServicesEnabled": true,
+  "publicClient": false,
+  "frontchannelLogout": true,
+  "protocol": "openid-connect",
+  "attributes": {
+    "oidc.ciba.grant.enabled": "false",
+    "client.secret.creation.time": "1704294035",
+    "backchannel.logout.session.required": "true",
+    "login_theme": "keycloak",
+    "post.logout.redirect.uris": "/*",
+    "oauth2.device.authorization.grant.enabled": "false",
+    "display.on.consent.screen": "false",
+    "backchannel.logout.revoke.offline.tokens": "false",
+    "frontchannel.logout.url": "",
+    "backchannel.logout.url": "",
+    "logoUri": "",
+    "policyUri": "",
+    "tosUri": "",
+    "access.token.signed.response.alg": "",
+    "id.token.signed.response.alg": "",
+    "id.token.encrypted.response.alg": "",
+    "id.token.encrypted.response.enc": "",
+    "user.info.response.signature.alg": "",
+    "user.info.encrypted.response.alg": "",
+    "user.info.encrypted.response.enc": "",
+    "request.object.signature.alg": "",
+    "request.object.encryption.alg": "",
+    "request.object.encryption.enc": "",
+    "request.object.required": "",
+    "authorization.signed.response.alg": "",
+    "authorization.encrypted.response.alg": "",
+    "authorization.encrypted.response.enc": "",
+    "exclude.session.state.from.auth.response": "",
+    "exclude.issuer.from.auth.response": "",
+    "use.refresh.tokens": "true",
+    "client_credentials.use_refresh_token": "false",
+    "token.response.type.bearer.lower-case": "false",
+    "access.token.lifespan": "",
+    "client.session.idle.timeout": "",
+    "client.session.max.lifespan": "",
+    "client.offline.session.idle.timeout": "",
+    "client.offline.session.max.lifespan": "",
+    "tls.client.certificate.bound.access.tokens": false,
+    "pkce.code.challenge.method": "",
+    "require.pushed.authorization.requests": "false",
+    "acr.loa.map": "{}"
+  },
+  "authenticationFlowBindingOverrides": {
+    "browser": "",
+    "direct_grant": ""
+  },
+  "fullScopeAllowed": true,
+  "nodeReRegistrationTimeout": -1,
+  "protocolMappers": [
+    {
+      "name": "Client Host",
+      "protocol": "openid-connect",
+      "protocolMapper": "oidc-usersessionmodel-note-mapper",
+      "consentRequired": false,
+      "config": {
+        "user.session.note": "clientHost",
+        "introspection.token.claim": "true",
+        "id.token.claim": "true",
+        "access.token.claim": "true",
+        "claim.name": "clientHost",
+        "jsonType.label": "String"
+      }
+    },
+    {
+      "name": "Client ID",
+      "protocol": "openid-connect",
+      "protocolMapper": "oidc-usersessionmodel-note-mapper",
+      "consentRequired": false,
+      "config": {
+        "user.session.note": "client_id",
+        "introspection.token.claim": "true",
+        "id.token.claim": "true",
+        "access.token.claim": "true",
+        "claim.name": "client_id",
+        "jsonType.label": "String"
+      }
+    },
+    {
+      "name": "Client IP Address",
+      "protocol": "openid-connect",
+      "protocolMapper": "oidc-usersessionmodel-note-mapper",
+      "consentRequired": false,
+      "config": {
+        "user.session.note": "clientAddress",
+        "introspection.token.claim": "true",
+        "id.token.claim": "true",
+        "access.token.claim": "true",
+        "claim.name": "clientAddress",
+        "jsonType.label": "String"
+      }
+    }
+  ],
+  "defaultClientScopes": [
+    "web-origins",
+    "acr",
+    "profile",
+    "roles",
+    "email"
+  ],
+  "optionalClientScopes": [
+    "address",
+    "phone",
+    "openid",
+    "offline_access",
+    "microprofile-jwt"
+  ],
+  "access": {
+    "view": true,
+    "configure": true,
+    "manage": true
+  }
+}

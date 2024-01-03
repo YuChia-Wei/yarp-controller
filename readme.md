@@ -1,9 +1,7 @@
 # Yarp Controller
 
 :::info
-這個專案正在進行開發，如果你有興趣，歡迎一起參與討論。
----
-This project is currently in development. If you're interested, feel free to discuss the content with me.
+development pending (controller)
 :::
 
 ## 系統用途、目的
@@ -24,3 +22,13 @@ This project is currently in development. If you're interested, feel free to dis
 ## 雜談
 
 我也預期利用這個專案來建立團隊合作時可能會需要的設定檔案，包括但不限於 editorconfig
+
+## docker testing
+
+run keylock
+
+```bash
+docker run -d -p 8080:8080 -p 8443:8443 -e KEYCLOAK_ADMIN=user -e KEYCLOAK_ADMIN_PASSWORD=password quay.io/keycloak/keycloak start-dev
+```
+
+client id testing json : [link](./doc/test_client.json)

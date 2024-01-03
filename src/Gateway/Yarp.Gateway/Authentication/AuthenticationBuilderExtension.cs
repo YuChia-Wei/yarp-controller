@@ -1,28 +1,48 @@
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using System.Text.Json;
 using IdentityModel;
 using IdentityModel.Client;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using StackExchange.Redis;
+using Yarp.Gateway.Authentication.OpenIdConnect;
 using Yarp.Gateway.Authentication.Options;
 
-namespace Yarp.Gateway.Authentication.OpenIdConnect;
+namespace Yarp.Gateway.Authentication;
 
-/// <summary>
-/// Auth 設定
-/// </summary>
 public static class AuthenticationBuilderExtension
 {
+    /// <summary>
+    /// 純 api 站台使用，加入 JWT 認證
+    /// </summary>
+    /// <param name="builder"></param>
+    /// <param name="jwtAuthOptions"></param>
+    public static AuthenticationBuilder AddJwtAuthentication(this AuthenticationBuilder builder, JwtAuthOptions jwtAuthOptions)
+    {
+        // .net 7 之後預設使用的 jwt 套件已移除 name 這個 claim key，可以使用以下方式加入預設解析的 key mapping，其他名稱對應也可用相同的方式處理
+        // JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Add(JwtRegisteredClaimNames.Name, ClaimTypes.Name);
+        // .net 8 之後要使用這個
+        // JsonWebTokenHandler.DefaultInboundClaimTypeMap.Add(JwtRegisteredClaimNames.Name, ClaimTypes.Name);
+        builder.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+        {
+            options.Authority = jwtAuthOptions.Authority;
+            options.RequireHttpsMetadata = jwtAuthOptions.RequireHttpsMetadata;
+            options.Audience = jwtAuthOptions.Audience;
+        });
+
+        return builder;
+    }
+
     /// <summary>
     /// MVC / Gateway 或其他需要 opid (OAuth2) 認證時使用
     /// </summary>
     /// <param name="builder">IServiceCollection</param>
-    /// <param name="authOptions">OpidAuthOptions</param>
+    /// <param name="authOptions">Opid</param>
     public static AuthenticationBuilder AddOpenIdConnectWithCookie(this AuthenticationBuilder builder,
                                                                    OpidAuthOptions authOptions)
     {
@@ -38,7 +58,7 @@ public static class AuthenticationBuilderExtension
         // cookies auth via.https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-7.0
         builder.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
                {
-                   options.Cookie.Name = authOptions.CookieLoginName;
+                   options.Cookie.Name = authOptions.LoginCookieName;
                    // options.Cookie.SameSite = SameSiteMode.Lax;
                    options.Cookie.SameSite = authOptions.CookieSameSiteMode;
 
@@ -46,9 +66,9 @@ public static class AuthenticationBuilderExtension
                    options.Cookie.SecurePolicy = authOptions.CookieSecurePolicy;
 
                    //如果有設定 cookie domain (要共用登入資訊) 的話，再指定 domain，不然哪個網址進入就存哪邊
-                   if (!string.IsNullOrEmpty(authOptions.CookieLoginDomain))
+                   if (!string.IsNullOrEmpty(authOptions.LoginCookieDomain))
                    {
-                       options.Cookie.Domain = authOptions.CookieLoginDomain;
+                       options.Cookie.Domain = authOptions.LoginCookieDomain;
                    }
 
                    options.SessionStore =
@@ -114,7 +134,7 @@ public static class AuthenticationBuilderExtension
                                var response = await httpClient.RequestRefreshTokenAsync(
                                                   new RefreshTokenRequest
                                                   {
-                                                      Address = $"{authOptions.Authority}/connect/token",
+                                                      Address = authOptions.RefreshTokenAddress,
                                                       ClientId = authOptions.ClientId,
                                                       ClientSecret = authOptions.ClientSecret,
                                                       RefreshToken = refreshToken!
@@ -155,8 +175,9 @@ public static class AuthenticationBuilderExtension
                    // 如果要改 redirect url 的時候要用這個
                    // options.CallbackPath = "/auth-redirect-url";
 
-                   options.RequireHttpsMetadata = true;
-                   options.ResponseType = OpenIdConnectResponseType.Code;
+                   options.RequireHttpsMetadata = authOptions.RequireHttpsMetadata;
+                   options.ResponseType = authOptions.ResponseType;
+                   // options.ResponseType = OpenIdConnectResponseType.Code;
                    // options.ResponseMode = OpenIdConnectResponseMode.FormPost;
 
                    // 沒有清除的話，預設 scope 裡面有一個 profile 的項目
@@ -194,22 +215,10 @@ public static class AuthenticationBuilderExtension
                    options.Events.OnUserInformationReceived = context =>
                    {
                        // var roleElement = context.User.RootElement.GetProperty("role");
-                       var roleElement = context.User.RootElement.GetProperty(JwtClaimTypes.Role);
-
-                       var claims = new List<Claim>();
-
-                       if (roleElement.ValueKind == JsonValueKind.Array)
+                       // var roleElement = context.User.RootElement.GetProperty(JwtClaimTypes.Role);
+                       if (context.User.RootElement.TryGetProperty(JwtClaimTypes.Role, out var roleElement))
                        {
-                           claims.AddRange(roleElement.EnumerateArray().Select(r => new Claim(JwtClaimTypes.Role, r.GetString() ?? string.Empty)));
-                       }
-                       else
-                       {
-                           claims.Add(new Claim(JwtClaimTypes.Role, roleElement.GetString() ?? string.Empty));
-                       }
-
-                       if (context.Principal?.Identity is ClaimsIdentity id)
-                       {
-                           id.AddClaims(claims);
+                           AppendRoleToClaims(context, roleElement);
                        }
 
                        return Task.CompletedTask;
@@ -219,5 +228,61 @@ public static class AuthenticationBuilderExtension
                    // options.UsePkce = false;
                });
         return builder;
+    }
+
+    /// <summary>
+    /// Add Authentication for Yarp
+    /// </summary>
+    /// <param name="serviceCollection"></param>
+    /// <param name="configurationManager"></param>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    /// <exception cref="ArgumentNullException"></exception>
+    public static void AddYarpAuthentication(this IServiceCollection serviceCollection, ConfigurationManager configurationManager)
+    {
+        var gatewayAuthSettingOptions = configurationManager.GetSection("GatewayAuthSetting").Get<GatewayAuthSettingOptions>();
+
+        ArgumentNullException.ThrowIfNull(gatewayAuthSettingOptions);
+
+        var authenticationBuilder = gatewayAuthSettingOptions.Default switch
+        {
+            DefaultAuthEnum.Opid => serviceCollection.AddAuthentication(options =>
+            {
+                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+            }),
+            DefaultAuthEnum.Jwt => serviceCollection.AddAuthentication(JwtBearerDefaults.AuthenticationScheme),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        if (gatewayAuthSettingOptions.Opid?.IsSettled ?? false)
+        {
+            authenticationBuilder.AddOpenIdConnectWithCookie(gatewayAuthSettingOptions.Opid);
+        }
+
+        if (gatewayAuthSettingOptions.Jwt?.IsSettled ?? false)
+        {
+            authenticationBuilder.AddJwtAuthentication(gatewayAuthSettingOptions.Jwt);
+        }
+    }
+
+    private static void AppendRoleToClaims(UserInformationReceivedContext context, JsonElement roleElement)
+    {
+        // context.User.RootElement.TryGetProperty("roles", out var rolesElement);
+
+        var claims = new List<Claim>();
+
+        if (roleElement.ValueKind == JsonValueKind.Array)
+        {
+            claims.AddRange(roleElement.EnumerateArray().Select(r => new Claim(JwtClaimTypes.Role, r.GetString() ?? string.Empty)));
+        }
+        else
+        {
+            claims.Add(new Claim(JwtClaimTypes.Role, roleElement.GetString() ?? string.Empty));
+        }
+
+        if (context.Principal?.Identity is ClaimsIdentity id)
+        {
+            id.AddClaims(claims);
+        }
     }
 }

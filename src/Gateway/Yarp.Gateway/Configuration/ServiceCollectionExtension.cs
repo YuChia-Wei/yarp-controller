@@ -9,11 +9,10 @@ public static class ServiceCollectionExtension
     /// 加入身分認證設定檔
     /// </summary>
     /// <param name="configurationManager"></param>
-    public static ConfigurationManager AddAuthenticationConfigurations(this ConfigurationManager configurationManager)
+    public static ConfigurationManager AddAuthenticationConfigurationJsons(this ConfigurationManager configurationManager)
     {
-        configurationManager
-            .AddJsonFile(Path.Combine("Configuration", "Authentication", "JwtSetting.json"), true, false)
-            .AddJsonFile(Path.Combine("Configuration", "Authentication", "OpidSetting.json"), true, false);
+        configurationManager.AddJwtAuthSetting(Path.Combine("Configuration", "Authentication", "JwtSetting.json"));
+        configurationManager.AddOpidAuthSetting(Path.Combine("Configuration", "Authentication", "OpidSetting.json"));
         return configurationManager;
     }
 
@@ -21,11 +20,31 @@ public static class ServiceCollectionExtension
     /// 加入 Yarp 設定控制檔
     /// </summary>
     /// <param name="configurationManager"></param>
-    public static ConfigurationManager AddYarpConfigurations(this ConfigurationManager configurationManager)
+    public static ConfigurationManager AddYarpConfigurationJsons(this ConfigurationManager configurationManager)
     {
-        configurationManager
-            .AddJsonFile(Path.Combine("Configuration", "ReverseProxy", "ClustersSetting.json"), true, true)
-            .AddJsonFile(Path.Combine("Configuration", "ReverseProxy", "RoutesSetting.json"), true, true);
+        configurationManager.AddYarpClusterJson(Path.Combine("Configuration", "ReverseProxy", "ClustersSetting.json"));
+        configurationManager.AddYarpRouteJson(Path.Combine("Configuration", "ReverseProxy", "RoutesSetting.json"));
+
         return configurationManager;
+    }
+
+    private static void AddJwtAuthSetting(this ConfigurationManager configurationManager, string filePath)
+    {
+        configurationManager.AddJsonFile(filePath, true, false);
+    }
+
+    private static void AddOpidAuthSetting(this ConfigurationManager configurationManager, string filePath)
+    {
+        configurationManager.AddJsonFile(filePath, true, false);
+    }
+
+    private static void AddYarpClusterJson(this ConfigurationManager configurationManager, string jsonPath)
+    {
+        configurationManager.AddJsonFile(jsonPath, true, true);
+    }
+
+    private static void AddYarpRouteJson(this ConfigurationManager configurationManager, string jsonPath)
+    {
+        configurationManager.AddJsonFile(jsonPath, true, true);
     }
 }

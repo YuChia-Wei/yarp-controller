@@ -1,6 +1,7 @@
 ﻿FROM ghcr.io/yuchia-wei/otel-dotnet-auto-instrumentation:8.0-alpine AS base
 WORKDIR /app
 EXPOSE 80
+EXPOSE 8080
 EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
