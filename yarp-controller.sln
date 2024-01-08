@@ -80,6 +80,33 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "datasources", "datasources"
 		docker\grafana-config\provisioning\datasources\datasources.yaml = docker\grafana-config\provisioning\datasources\datasources.yaml
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "charts", "charts", "{952854D9-C85E-42EC-8D2C-9CE7EE668AD3}"
+	ProjectSection(SolutionItems) = preProject
+		charts\yarp-gateway\.helmignore = charts\yarp-gateway\.helmignore
+		charts\yarp-gateway\Chart.yaml = charts\yarp-gateway\Chart.yaml
+		charts\yarp-gateway\README.md = charts\yarp-gateway\README.md
+		charts\yarp-gateway\templates\configmap-auth-config.yaml = charts\yarp-gateway\templates\configmap-auth-config.yaml
+		charts\yarp-gateway\templates\configmap-otel-env.yaml = charts\yarp-gateway\templates\configmap-otel-env.yaml
+		charts\yarp-gateway\templates\configmap-yarp-config.yaml = charts\yarp-gateway\templates\configmap-yarp-config.yaml
+		charts\yarp-gateway\templates\deployment.yaml = charts\yarp-gateway\templates\deployment.yaml
+		charts\yarp-gateway\templates\destinationRule.yaml = charts\yarp-gateway\templates\destinationRule.yaml
+		charts\yarp-gateway\templates\gateway.yaml = charts\yarp-gateway\templates\gateway.yaml
+		charts\yarp-gateway\templates\horizontalPodAutoscaler.yaml = charts\yarp-gateway\templates\horizontalPodAutoscaler.yaml
+		charts\yarp-gateway\templates\podDisruptionBudget.yaml = charts\yarp-gateway\templates\podDisruptionBudget.yaml
+		charts\yarp-gateway\templates\rollout.yaml = charts\yarp-gateway\templates\rollout.yaml
+		charts\yarp-gateway\templates\service.yaml = charts\yarp-gateway\templates\service.yaml
+		charts\yarp-gateway\templates\serviceAccount.yaml = charts\yarp-gateway\templates\serviceAccount.yaml
+		charts\yarp-gateway\templates\virtualService.yaml = charts\yarp-gateway\templates\virtualService.yaml
+		charts\yarp-gateway\values.yaml = charts\yarp-gateway\values.yaml
+		charts\yarp-gateway\yarpConfig\ClustersSetting.json = charts\yarp-gateway\yarpConfig\ClustersSetting.json
+		charts\yarp-gateway\yarpConfig\RoutesSetting.json = charts\yarp-gateway\yarpConfig\RoutesSetting.json
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{D1240373-3BB2-409E-94E2-9A21708E3C3E}"
+	ProjectSection(SolutionItems) = preProject
+		.github\yarp-gateway.yaml = .github\yarp-gateway.yaml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

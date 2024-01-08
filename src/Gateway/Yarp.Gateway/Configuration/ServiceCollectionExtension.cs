@@ -11,8 +11,8 @@ public static class ServiceCollectionExtension
     /// <param name="configurationManager"></param>
     public static ConfigurationManager AddAuthenticationConfigurationJsons(this ConfigurationManager configurationManager)
     {
-        configurationManager.AddJwtAuthSetting(Path.Combine("Configuration", "Authentication", "JwtSetting.json"));
-        configurationManager.AddOpidAuthSetting(Path.Combine("Configuration", "Authentication", "OpidSetting.json"));
+        configurationManager.AddAuthSetting(GetRealJsonPath(Path.Combine("Configuration", "Authentication", "AuthSetting.json")));
+
         return configurationManager;
     }
 
@@ -22,18 +22,14 @@ public static class ServiceCollectionExtension
     /// <param name="configurationManager"></param>
     public static ConfigurationManager AddYarpConfigurationJsons(this ConfigurationManager configurationManager)
     {
-        configurationManager.AddYarpClusterJson(Path.Combine("Configuration", "ReverseProxy", "ClustersSetting.json"));
-        configurationManager.AddYarpRouteJson(Path.Combine("Configuration", "ReverseProxy", "RoutesSetting.json"));
+        //因為需要動態處理檔案，所以必須確認檔案的正確位置，才能真的去異動資訊
+        configurationManager.AddYarpClusterJson(GetRealJsonPath(Path.Combine("Configuration", "ReverseProxy", "ClustersSetting.json")));
+        configurationManager.AddYarpRouteJson(GetRealJsonPath(Path.Combine("Configuration", "ReverseProxy", "RoutesSetting.json")));
 
         return configurationManager;
     }
 
-    private static void AddJwtAuthSetting(this ConfigurationManager configurationManager, string filePath)
-    {
-        configurationManager.AddJsonFile(filePath, true, false);
-    }
-
-    private static void AddOpidAuthSetting(this ConfigurationManager configurationManager, string filePath)
+    private static void AddAuthSetting(this ConfigurationManager configurationManager, string filePath)
     {
         configurationManager.AddJsonFile(filePath, true, false);
     }
@@ -46,5 +42,11 @@ public static class ServiceCollectionExtension
     private static void AddYarpRouteJson(this ConfigurationManager configurationManager, string jsonPath)
     {
         configurationManager.AddJsonFile(jsonPath, true, true);
+    }
+
+    private static string GetRealJsonPath(string jsonPath)
+    {
+        var resolveLinkTarget = File.ResolveLinkTarget(jsonPath, true);
+        return resolveLinkTarget?.FullName ?? jsonPath;
     }
 }

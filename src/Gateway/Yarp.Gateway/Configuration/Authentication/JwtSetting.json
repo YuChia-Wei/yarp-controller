@@ -1,9 +1,0 @@
-﻿{
-  "GatewayAuthSetting": {
-    "Jwt": {
-      "Authority": "http://localhost:8080",
-      "Audience": "",
-      "RequireHttpsMetadata": true
-    }
-  }
-}

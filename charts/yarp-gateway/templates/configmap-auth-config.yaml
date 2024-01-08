@@ -1,0 +1,14 @@
+{{- if .Values.AuthSetting }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ (print .Values.service "-auth-config") | lower | quote }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.service | lower | quote }}
+    app.kubernetes.io/part-of: {{ .Values.system | quote }}
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+  namespace: {{ .Release.Namespace | quote }}
+data:
+  "AuthSetting.json": |-
+{{ toJson .Values.AuthSetting | indent 4 }}
+{{- end }}

@@ -1,0 +1,27 @@
+{
+  "ReverseProxy": {
+    "Routes": {
+      "default-route": {
+        "ClusterId": "default-cluster",
+        "AuthorizationPolicy": "Default",
+        "CorsPolicy": "CorsPolicy",
+        "Match": {
+          "Path": "{**catchall}"
+        }
+      },
+      "anonymous-route": {
+        "ClusterId": "default-cluster",
+        "AuthorizationPolicy": "Anonymous",
+        "CorsPolicy": "CorsPolicy",
+        "Match": {
+          "Path": "/anonymous/{**catchall}"
+        },
+        "Transforms": [
+          {
+            "PathRemovePrefix": "/anonymous"
+          }
+        ]
+      }
+    }
+  }
+}

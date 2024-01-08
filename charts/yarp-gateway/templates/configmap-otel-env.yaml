@@ -1,0 +1,37 @@
+{{- if and .Values.openTelemetry .Values.openTelemetry.enable }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ (print .Values.service "-otel-env") | lower | quote }}
+  labels:
+    app.kubernetes.io/name: {{ .Values.service | lower | quote }}
+    app.kubernetes.io/part-of: {{ .Values.system | quote }}
+    app.kubernetes.io/managed-by: {{ .Release.Service | quote }}
+  namespace: {{ .Release.Namespace | quote }}
+data:
+  ASPNETCORE_HOSTINGSTARTUPASSEMBLIES: "OpenTelemetry.AutoInstrumentation.AspNetCoreBootstrapper"
+  CORECLR_ENABLE_PROFILING: {{ .Values.openTelemetry.enableCLRProfiler | default "1"  | quote }}
+  CORECLR_PROFILER: '{918728DD-259F-4A6A-AC2B-B85E1B658318}'
+  # 這邊因為使用的容器會另外複製必要檔案到此位置，為自定義路徑
+  CORECLR_PROFILER_PATH: "/otel-dotnet-auto/OpenTelemetry.AutoInstrumentation.Native.so"
+  # 這個是 Otel Auto Instrumentation 中給 alpine 使用的正確路徑
+  # CORECLR_PROFILER_PATH: "/otel-dotnet-auto/linux-musl-x64/OpenTelemetry.AutoInstrumentation.Native.so"
+  DOTNET_ADDITIONAL_DEPS: "/otel-dotnet-auto/AdditionalDeps"
+  DOTNET_SHARED_STORE: "/otel-dotnet-auto/store"
+  DOTNET_STARTUP_HOOKS: "/otel-dotnet-auto/net/OpenTelemetry.AutoInstrumentation.StartupHook.dll"
+  OTEL_DOTNET_AUTO_HOME: "/otel-dotnet-auto"
+  OTEL_SERVICE_NAME: {{ .Values.service | lower | quote }}
+# 最後的 deployment.environment 設定建議由對應環境的收集器決定，同時這代表你的資料應該送給跟服務部署相同環境的收集器
+#   OTEL_RESOURCE_ATTRIBUTES: "service.version={{ .Values.image.repository }}:{{ .Values.image.tag }}, service.namespace={{ .Release.Namespace }}, deployment.environment={{ .Values.env.ASPNETCORE_ENVIRONMENT }}"
+  OTEL_RESOURCE_ATTRIBUTES: "service.version={{ .Values.image.repository }}:{{ .Values.image.tag }}, service.namespace={{ .Release.Namespace }}"
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.openTelemetry.otlpEndpoint | default "http://otel-collector.observability.svc.cluster.local:4317" | quote }}
+  OTEL_EXPORTER_OTLP_PROTOCOL: {{ .Values.openTelemetry.otlpProtocol | default "grpc" | quote }}
+  OTEL_DOTNET_AUTO_LOGS_ENABLED: {{ .Values.openTelemetry.autoLogs | default "false" | quote }}
+  OTEL_DOTNET_AUTO_LOGS_INCLUDE_FORMATTED_MESSAGE: {{ .Values.openTelemetry.autoLogsIncludeFormatted | default "true" | quote }}
+# 這邊的兩個資源應該要依據服務中的埋點設定決定
+  OTEL_DOTNET_AUTO_TRACES_ADDITIONAL_SOURCES: "yarp.gateway.observability.library"
+  OTEL_DOTNET_AUTO_METRICS_ADDITIONAL_SOURCES:  "yarp.gateway.observability.library"
+  Logging__Console__FormatterName: "Simple"
+  Logging__OpenTelemetry__IncludeScopes: "true"
+  Logging__OpenTelemetry__LogLevel__Default: "Information"
+{{- end }}
