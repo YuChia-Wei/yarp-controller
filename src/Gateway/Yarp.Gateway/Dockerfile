@@ -7,7 +7,7 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build
 ARG BuildConfiguration=Debug
 WORKDIR /src
-COPY ["nuget.config", "."]
+#COPY ["nuget.config", "."]
 COPY ["Yarp.Gateway/Yarp.Gateway.csproj", "Yarp.Gateway/"]
 RUN dotnet restore "Yarp.Gateway/Yarp.Gateway.csproj"
 COPY . .
