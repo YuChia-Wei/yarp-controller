@@ -84,7 +84,7 @@ httpHeaders:
 # host name to this service on the ports and protocols defined in the 'ports' section
 # above.
 istioGateway:
-  name: gateway-gateway
+  name: yarp-gateway
   host: "*"
   matchPrefix:
     - "/"
@@ -174,7 +174,7 @@ AuthSetting:
     LoginApplicationName: "my_app"
     LoginCookieName: "local_login"
 #    LoginCookieDomain: ""
-    TicketStoreRedisServer: "localhost:6379"
+    TicketStoreRedisServer: "redis-cluster-leader-headless.cache.svc.cluster.local:6379"
     RequireHttpsMetadata: "false"
     ResponseType: "code"
     RefreshTokenAddress: "http://localhost:8080/realms/master/protocol/openid-connect/token"
