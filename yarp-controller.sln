@@ -103,8 +103,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "charts", "charts", "{952854
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{D1240373-3BB2-409E-94E2-9A21708E3C3E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{E474001A-8637-4961-9A0C-C5CB47223260}"
 	ProjectSection(SolutionItems) = preProject
-		.github\yarp-gateway.yaml = .github\yarp-gateway.yaml
+		.github\workflows\yarp-gateway.yaml = .github\workflows\yarp-gateway.yaml
 	EndProjectSection
 EndProject
 Global
@@ -161,5 +163,6 @@ Global
 		{7D0F0197-463B-43EE-99C3-AB4D70A21AB2} = {48927DFA-DB50-4004-B581-9310FB243EA5}
 		{BFD3FBA2-3436-41CC-8CB1-2FEB16F7F140} = {7D0F0197-463B-43EE-99C3-AB4D70A21AB2}
 		{B898BB36-056D-4508-8D6B-334D870B2F24} = {7D0F0197-463B-43EE-99C3-AB4D70A21AB2}
+		{E474001A-8637-4961-9A0C-C5CB47223260} = {D1240373-3BB2-409E-94E2-9A21708E3C3E}
 	EndGlobalSection
 EndGlobal
