@@ -12,9 +12,3 @@ public class GatewayAuthSettingOptions
     [JsonPropertyName("Opid")]
     public OpidAuthOptions? Opid { get; set; }
 }
-
-public enum DefaultAuthEnum
-{
-    Opid = 1,
-    Jwt = 2
-}
