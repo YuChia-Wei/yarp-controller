@@ -10,9 +10,9 @@ metadata:
 data:
   {{- if .Values.yarpConfig.RoutesSettingFile }}
   "RoutesSetting.json": |-
-    {{ .Files.Get .Values.yarpConfig.RoutesSettingFile  | indent 4 | quote }}
+{{ .Files.Get .Values.yarpConfig.RoutesSettingFile | indent 4 }}
   {{- end }}
   {{- if .Values.yarpConfig.ClustersSettingFile }}
   "ClustersSetting.json": |-
-    {{ .Files.Get .Values.yarpConfig.ClustersSettingFile |  indent 4 | quote }}
+{{ .Files.Get .Values.yarpConfig.ClustersSettingFile | indent 4 }}
   {{- end }}
