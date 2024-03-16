@@ -49,7 +49,7 @@ public class ClusterController : ControllerBase
             Metadata = cluster.MetaData
         };
 
-        var executeResult = await this._mediator.Send(createClusterCommand, cancellationToken);
+        var executeResult = await this._mediator.Send(createClusterCommand, cancellationToken).ConfigureAwait(false);
 
         if (!executeResult.IsSuccess)
         {
