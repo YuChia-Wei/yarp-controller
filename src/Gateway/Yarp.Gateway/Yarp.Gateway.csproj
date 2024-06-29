@@ -14,12 +14,12 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="IdentityModel" Version="6.2.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.1" />
-        <PackageReference Include="StackExchange.Redis" Version="2.7.17" />
-        <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.1" />
-        <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.1" />
-        <PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" Version="8.0.1" />
+        <PackageReference Include="IdentityModel" Version="7.0.0" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.6" />
+        <PackageReference Include="StackExchange.Redis" Version="2.8.0" />
+        <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="8.0.6" />
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.6" />
+        <PackageReference Include="Microsoft.AspNetCore.DataProtection.StackExchangeRedis" Version="8.0.6" />
         <PackageReference Include="Yarp.ReverseProxy" Version="2.1.0" />
         <PackageReference Include="Yarp.Telemetry.Consumption" Version="2.1.0" />
     </ItemGroup>
