@@ -45,7 +45,9 @@ builder.Services.AddW3CLogging(logging =>
     logging.AdditionalRequestHeaders.Add("x-forwarded-for");
 });
 
-builder.Services.AddYarpAuthentication(builder.Configuration);
+// builder.Services.AddYarpAuthentication(builder.Configuration);
+builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
 
 builder.Services.AddHttpClient();
 builder.Services.AddHttpForwarder();
@@ -90,9 +92,9 @@ app.UseRouting();
 
 app.UseCors("CorsPolicy");
 
-// app.UseAuthentication();
-//
-// app.UseAuthorization();
+app.UseAuthentication();
+
+app.UseAuthorization();
 
 app.MapReverseProxy();
 
