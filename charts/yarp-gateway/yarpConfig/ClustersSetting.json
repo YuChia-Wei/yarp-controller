@@ -4,7 +4,7 @@
       "default-cluster": {
         "Destinations": {
           "first_destination": {
-            "Address": "https://test-domain/"
+            "Address": "http://dotnet-webapi.lab.svc.cluster.local:8080/"
           }
         }
       }

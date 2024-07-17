@@ -149,7 +149,7 @@ probes:
 # .net 的追蹤設定，docker 建置時需要使用含有 open telemetry auto instrumentation 此工具的容器基底
 openTelemetry:
   enable: true
-  otlpEndpoint: "http://otel-collector.observability.svc.cluster.local:4317"
+  otlpEndpoint: "http://otel-collector.open-telemetry.svc.cluster.local:4317"
   otlpProtocol: "grpc"
   autoLogs: "true"
   enableCLRProfiler: "1"
