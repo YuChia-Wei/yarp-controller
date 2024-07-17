@@ -37,7 +37,7 @@ image:
   # The name of your docker container
   repository: "ghcr.io/yuchia-wei/yarp-gateway"
   # Your docker container's tag
-  tag: "v0.0.1"
+  tag: "v0.0.2"
   imagePullPolicy: IfNotPresent
 
 # Istio uses the service account name as a component of the service's security
@@ -85,7 +85,7 @@ httpHeaders:
 # above.
 istioGateway:
   name: yarp-gateway
-  host: "*"
+  host: "app.local.vm"
   matchPrefix:
     - "/"
   uriRewrite: "/"
