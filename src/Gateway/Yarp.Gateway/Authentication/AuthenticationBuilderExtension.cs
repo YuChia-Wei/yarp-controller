@@ -254,10 +254,10 @@ public static class AuthenticationBuilderExtension
             _ => throw new ArgumentOutOfRangeException()
         };
 
-        if (gatewayAuthSettingOptions.Opid?.IsSettled ?? false)
-        {
-            authenticationBuilder.AddOpenIdConnectWithCookie(gatewayAuthSettingOptions.Opid);
-        }
+        // if (gatewayAuthSettingOptions.Opid?.IsSettled ?? false)
+        // {
+        //     authenticationBuilder.AddOpenIdConnectWithCookie(gatewayAuthSettingOptions.Opid);
+        // }
 
         if (gatewayAuthSettingOptions.Jwt?.IsSettled ?? false)
         {

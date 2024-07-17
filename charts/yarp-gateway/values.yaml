@@ -165,7 +165,6 @@ AuthSetting:
     Audience: "--"
     RequireHttpsMetadata: "true"
   Opid:
-    IsSettled: "false"
     ClientId: "test_client"
     ClientSecret: "6ZyOGaalxmk0NIZCg9w81lIU9bxnDL4P"
     Authority: "http://localhost:8080/realms/master/"
