@@ -2,39 +2,39 @@
 
 namespace Yarp.Gateway.Authentication.Options;
 
-public class OpidAuthOptions
+public class OpidAuthConfiguration
 {
     /// <summary>
     /// Authority Url
     /// </summary>
-    public string Authority { get; set; }
+    public required string Authority { get; set; }
 
     /// <summary>
     /// ClientId
     /// </summary>
-    public string ClientId { get; set; }
+    public required string ClientId { get; set; }
 
     /// <summary>
     /// Gets or sets the client secret.
     /// </summary>
     /// <value>The client secret.</value>
-    public string ClientSecret { get; set; }
+    public required string ClientSecret { get; set; }
 
     /// <summary>
     /// Gets or sets the audience.
     /// </summary>
     /// <value>The audience.</value>
-    public IEnumerable<string> WebApiAudience { get; set; }
+    public required IEnumerable<string> WebApiAudience { get; set; }
 
     /// <summary>
     /// Cookies 的名稱
     /// </summary>
-    public string LoginCookieName { get; set; }
+    public required string LoginCookieName { get; set; }
 
     /// <summary>
     /// Cookies 所屬網域
     /// </summary>
-    public string LoginCookieDomain { get; set; }
+    public required string LoginCookieDomain { get; set; }
 
     /// <summary>
     /// Cookie Secure Policy (default is non)
@@ -49,17 +49,12 @@ public class OpidAuthOptions
     /// <summary>
     /// ticket store redis server url
     /// </summary>
-    public string TicketStoreRedisServer { get; set; }
+    public required string TicketStoreRedisServer { get; set; }
 
     /// <summary>
     /// 登入的服務名稱
     /// </summary>
-    public string LoginApplicationName { get; set; }
-
-    /// <summary>
-    /// 是否有設定
-    /// </summary>
-    public bool IsSettled { get; set; } = true;
+    public required string LoginApplicationName { get; set; }
 
     public bool RequireHttpsMetadata { get; set; } = true;
 

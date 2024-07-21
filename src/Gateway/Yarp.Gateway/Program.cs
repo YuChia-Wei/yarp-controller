@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
 using Yarp.Gateway.Authentication;
+using Yarp.Gateway.Authentication.Options;
 using Yarp.Gateway.Configuration;
 using Yarp.Gateway.Observability;
 
@@ -45,9 +46,8 @@ builder.Services.AddW3CLogging(logging =>
     logging.AdditionalRequestHeaders.Add("x-forwarded-for");
 });
 
-// builder.Services.AddYarpAuthentication(builder.Configuration);
-builder.Services.AddAuthentication();
-builder.Services.AddAuthorization();
+var gatewayAuthSettingOptions = builder.Configuration.GetSection(GatewayAuthConfiguration.JsonSectionName).Get<GatewayAuthConfiguration>();
+builder.Services.AddYarpAuthentication(gatewayAuthSettingOptions);
 
 builder.Services.AddHttpClient();
 builder.Services.AddHttpForwarder();

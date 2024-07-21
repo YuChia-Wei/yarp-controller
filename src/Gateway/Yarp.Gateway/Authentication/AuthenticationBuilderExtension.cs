@@ -21,8 +21,8 @@ public static class AuthenticationBuilderExtension
     /// 純 api 站台使用，加入 JWT 認證
     /// </summary>
     /// <param name="builder"></param>
-    /// <param name="jwtAuthOptions"></param>
-    public static AuthenticationBuilder AddJwtAuthentication(this AuthenticationBuilder builder, JwtAuthOptions jwtAuthOptions)
+    /// <param name="jwtAuthConfiguration"></param>
+    public static AuthenticationBuilder AddJwtAuthentication(this AuthenticationBuilder builder, JwtAuthConfiguration jwtAuthConfiguration)
     {
         // .net 7 之後預設使用的 jwt 套件已移除 name 這個 claim key，可以使用以下方式加入預設解析的 key mapping，其他名稱對應也可用相同的方式處理
         // JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Add(JwtRegisteredClaimNames.Name, ClaimTypes.Name);
@@ -30,9 +30,9 @@ public static class AuthenticationBuilderExtension
         // JsonWebTokenHandler.DefaultInboundClaimTypeMap.Add(JwtRegisteredClaimNames.Name, ClaimTypes.Name);
         builder.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
         {
-            options.Authority = jwtAuthOptions.Authority;
-            options.RequireHttpsMetadata = jwtAuthOptions.RequireHttpsMetadata;
-            options.Audience = jwtAuthOptions.Audience;
+            options.Authority = jwtAuthConfiguration.Authority;
+            options.RequireHttpsMetadata = jwtAuthConfiguration.RequireHttpsMetadata;
+            options.Audience = jwtAuthConfiguration.Audience;
         });
 
         return builder;
@@ -42,37 +42,38 @@ public static class AuthenticationBuilderExtension
     /// MVC / Gateway 或其他需要 opid (OAuth2) 認證時使用
     /// </summary>
     /// <param name="builder">IServiceCollection</param>
-    /// <param name="authOptions">Opid</param>
-    public static AuthenticationBuilder AddOpenIdConnectWithCookie(this AuthenticationBuilder builder,
-                                                                   OpidAuthOptions authOptions)
+    /// <param name="authConfiguration">Opid</param>
+    public static AuthenticationBuilder AddOpenIdConnectWithCookie(
+        this AuthenticationBuilder builder,
+        OpidAuthConfiguration authConfiguration)
     {
         // Cookie OAuth 會需要設定 HA Server 時的外部資料儲存來源
         // 在 Cookie Auth 區塊有設定 SessionStore 的狀況下，這個設定無效 (via. https://github.com/dotnet/AspNetCore.Docs/issues/21163 )
         // ref: https://learn.microsoft.com/en-us/aspnet/core/security/cookie-sharing?view=aspnetcore-7.0#share-authentication-cookies-with-aspnet-core-identity
         builder.Services
                .AddDataProtection()
-               .PersistKeysToStackExchangeRedis(ConnectionMultiplexer.Connect(authOptions.TicketStoreRedisServer),
-                                                $"{authOptions.LoginApplicationName}:LoginCookies:")
-               .SetApplicationName(authOptions.LoginApplicationName);
+               .PersistKeysToStackExchangeRedis(ConnectionMultiplexer.Connect(authConfiguration.TicketStoreRedisServer),
+                                                $"{authConfiguration.LoginApplicationName}:LoginCookies:")
+               .SetApplicationName(authConfiguration.LoginApplicationName);
 
         // cookies auth via.https://learn.microsoft.com/en-us/aspnet/core/security/authentication/cookie?view=aspnetcore-7.0
         builder.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
                {
-                   options.Cookie.Name = authOptions.LoginCookieName;
+                   options.Cookie.Name = authConfiguration.LoginCookieName;
                    // options.Cookie.SameSite = SameSiteMode.Lax;
-                   options.Cookie.SameSite = authOptions.CookieSameSiteMode;
+                   options.Cookie.SameSite = authConfiguration.CookieSameSiteMode;
 
                    // options.Cookie.SecurePolicy = CookieSecurePolicy.None;
-                   options.Cookie.SecurePolicy = authOptions.CookieSecurePolicy;
+                   options.Cookie.SecurePolicy = authConfiguration.CookieSecurePolicy;
 
                    //如果有設定 cookie domain (要共用登入資訊) 的話，再指定 domain，不然哪個網址進入就存哪邊
-                   if (!string.IsNullOrEmpty(authOptions.LoginCookieDomain))
+                   if (!string.IsNullOrEmpty(authConfiguration.LoginCookieDomain))
                    {
-                       options.Cookie.Domain = authOptions.LoginCookieDomain;
+                       options.Cookie.Domain = authConfiguration.LoginCookieDomain;
                    }
 
                    options.SessionStore =
-                       new RedisCacheTicketStore($"{authOptions.LoginApplicationName}:LoginSession:", authOptions.TicketStoreRedisServer);
+                       new RedisCacheTicketStore($"{authConfiguration.LoginApplicationName}:LoginSession:", authConfiguration.TicketStoreRedisServer);
 
                    options.Events = new CookieAuthenticationEvents
                    {
@@ -134,9 +135,9 @@ public static class AuthenticationBuilderExtension
                                var response = await httpClient.RequestRefreshTokenAsync(
                                                   new RefreshTokenRequest
                                                   {
-                                                      Address = authOptions.RefreshTokenAddress,
-                                                      ClientId = authOptions.ClientId,
-                                                      ClientSecret = authOptions.ClientSecret,
+                                                      Address = authConfiguration.RefreshTokenAddress,
+                                                      ClientId = authConfiguration.ClientId,
+                                                      ClientSecret = authConfiguration.ClientSecret,
                                                       RefreshToken = refreshToken!
                                                   }).ConfigureAwait(false);
 
@@ -168,15 +169,15 @@ public static class AuthenticationBuilderExtension
                })
                .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
                {
-                   options.Authority = authOptions.Authority;
-                   options.ClientId = authOptions.ClientId;
-                   options.ClientSecret = authOptions.ClientSecret;
+                   options.Authority = authConfiguration.Authority;
+                   options.ClientId = authConfiguration.ClientId;
+                   options.ClientSecret = authConfiguration.ClientSecret;
 
                    // 如果要改 redirect url 的時候要用這個
                    // options.CallbackPath = "/auth-redirect-url";
 
-                   options.RequireHttpsMetadata = authOptions.RequireHttpsMetadata;
-                   options.ResponseType = authOptions.ResponseType;
+                   options.RequireHttpsMetadata = authConfiguration.RequireHttpsMetadata;
+                   options.ResponseType = authConfiguration.ResponseType;
                    // options.ResponseType = OpenIdConnectResponseType.Code;
                    // options.ResponseMode = OpenIdConnectResponseMode.FormPost;
 
@@ -187,7 +188,7 @@ public static class AuthenticationBuilderExtension
                    options.Scope.Add(OpenIdConnectScope.OpenId);
 
                    // 從設定檔中取得 OAuth Scope
-                   foreach (var item in authOptions.WebApiAudience)
+                   foreach (var item in authConfiguration.WebApiAudience)
                    {
                        options.Scope.Add(item);
                    }
@@ -234,34 +235,46 @@ public static class AuthenticationBuilderExtension
     /// Add Authentication for Yarp
     /// </summary>
     /// <param name="serviceCollection"></param>
-    /// <param name="configurationManager"></param>
+    /// <param name="gatewayAuthConfiguration"></param>
     /// <exception cref="ArgumentOutOfRangeException"></exception>
     /// <exception cref="ArgumentNullException"></exception>
-    public static void AddYarpAuthentication(this IServiceCollection serviceCollection, ConfigurationManager configurationManager)
+    public static void AddYarpAuthentication(this IServiceCollection serviceCollection, GatewayAuthConfiguration? gatewayAuthConfiguration)
     {
-        var gatewayAuthSettingOptions = configurationManager.GetSection("GatewayAuthSetting").Get<GatewayAuthSettingOptions>();
+        ArgumentNullException.ThrowIfNull(gatewayAuthConfiguration);
 
-        ArgumentNullException.ThrowIfNull(gatewayAuthSettingOptions);
-
-        var authenticationBuilder = gatewayAuthSettingOptions.Default switch
+        AuthenticationBuilder authenticationBuilder;
+        switch (gatewayAuthConfiguration.Default)
         {
-            DefaultAuthEnum.Opid => serviceCollection.AddAuthentication(options =>
-            {
-                options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
-            }),
-            DefaultAuthEnum.Jwt => serviceCollection.AddAuthentication(JwtBearerDefaults.AuthenticationScheme),
-            _ => throw new ArgumentOutOfRangeException()
-        };
+            case DefaultAuthMethod.Anonymous:
+                authenticationBuilder = serviceCollection.AddAuthentication();
+                break;
 
-        // if (gatewayAuthSettingOptions.Opid?.IsSettled ?? false)
-        // {
-        //     authenticationBuilder.AddOpenIdConnectWithCookie(gatewayAuthSettingOptions.Opid);
-        // }
+            case DefaultAuthMethod.Opid:
+                ArgumentNullException.ThrowIfNull(gatewayAuthConfiguration.Opid);
 
-        if (gatewayAuthSettingOptions.Jwt?.IsSettled ?? false)
+                authenticationBuilder = serviceCollection.AddAuthentication(options =>
+                {
+                    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+                });
+                break;
+            case DefaultAuthMethod.Jwt:
+                ArgumentNullException.ThrowIfNull(gatewayAuthConfiguration.Jwt);
+
+                authenticationBuilder = serviceCollection.AddAuthentication(JwtBearerDefaults.AuthenticationScheme);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+
+        if (gatewayAuthConfiguration.Opid is not null)
         {
-            authenticationBuilder.AddJwtAuthentication(gatewayAuthSettingOptions.Jwt);
+            authenticationBuilder.AddOpenIdConnectWithCookie(gatewayAuthConfiguration.Opid);
+        }
+
+        if (gatewayAuthConfiguration.Jwt is not null)
+        {
+            authenticationBuilder.AddJwtAuthentication(gatewayAuthConfiguration.Jwt);
         }
     }
 
