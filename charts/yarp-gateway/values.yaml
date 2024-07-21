@@ -163,21 +163,21 @@ AuthSetting:
   Jwt:
     Authority: "http://localhost:8080"
     Audience: "--"
-    RequireHttpsMetadata: "true"
-  Opid:
-    ClientId: "test_client"
-    ClientSecret: "6ZyOGaalxmk0NIZCg9w81lIU9bxnDL4P"
-    Authority: "http://localhost:8080/realms/master/"
-    WebApiAudience:
-      - "profile"
-      - "roles"
-    LoginApplicationName: "my_app"
-    LoginCookieName: "local_login"
-#    LoginCookieDomain: ""
-    TicketStoreRedisServer: "redis-cluster-leader-headless.cache.svc.cluster.local:6379"
     RequireHttpsMetadata: "false"
-    ResponseType: "code"
-    RefreshTokenAddress: "http://localhost:8080/realms/master/protocol/openid-connect/token"
+#  Opid:
+#    ClientId: "test_client"
+#    ClientSecret: "6ZyOGaalxmk0NIZCg9w81lIU9bxnDL4P"
+#    Authority: "http://localhost:8080/realms/master/"
+#    WebApiAudience:
+#      - "profile"
+#      - "roles"
+#    LoginApplicationName: "my_app"
+#    LoginCookieName: "local_login"
+#    LoginCookieDomain: ""
+#    TicketStoreRedisServer: "redis-cluster-leader-headless.cache.svc.cluster.local:6379"
+#    RequireHttpsMetadata: "false"
+#    ResponseType: "code"
+#    RefreshTokenAddress: "http://localhost:8080/realms/master/protocol/openid-connect/token"
 
 # 設定容器執行時的參數
 env:
