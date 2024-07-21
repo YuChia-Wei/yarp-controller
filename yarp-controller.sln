@@ -20,8 +20,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yarp.ControlPlant.WebApi", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{386B23E7-94C3-4604-BB2A-1E39505859E3}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{3934B2B1-9DD8-4C39-9E4D-871287127BF6}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Gayeway", "Gayeway", "{411AF950-15AB-41DA-A6E6-61D6F9BDD45E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yarp.ControlPlant.Infra", "src\ControlPlant\Yarp.ControlPlant.Infra\Yarp.ControlPlant.Infra.csproj", "{F6DC5676-D666-43C3-9B6E-B5E575DD69C5}"
@@ -109,6 +107,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		.github\workflows\yarp-gateway.yaml = .github\workflows\yarp-gateway.yaml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yarp.Gateway.Tests", "src\Gateway\Yarp.Gateway.Tests\Yarp.Gateway.Tests.csproj", "{0F9D95C4-56EE-4918-A4D8-6110BB3D4654}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -143,6 +143,10 @@ Global
 		{E06CAF2D-1A3F-494D-A713-58E559062829}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E06CAF2D-1A3F-494D-A713-58E559062829}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E06CAF2D-1A3F-494D-A713-58E559062829}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F9D95C4-56EE-4918-A4D8-6110BB3D4654}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F9D95C4-56EE-4918-A4D8-6110BB3D4654}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F9D95C4-56EE-4918-A4D8-6110BB3D4654}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F9D95C4-56EE-4918-A4D8-6110BB3D4654}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{614D3B05-A8FF-4861-A0E8-092A254FB106} = {386B23E7-94C3-4604-BB2A-1E39505859E3}
@@ -164,5 +168,6 @@ Global
 		{BFD3FBA2-3436-41CC-8CB1-2FEB16F7F140} = {7D0F0197-463B-43EE-99C3-AB4D70A21AB2}
 		{B898BB36-056D-4508-8D6B-334D870B2F24} = {7D0F0197-463B-43EE-99C3-AB4D70A21AB2}
 		{E474001A-8637-4961-9A0C-C5CB47223260} = {D1240373-3BB2-409E-94E2-9A21708E3C3E}
+		{0F9D95C4-56EE-4918-A4D8-6110BB3D4654} = {411AF950-15AB-41DA-A6E6-61D6F9BDD45E}
 	EndGlobalSection
 EndGlobal
