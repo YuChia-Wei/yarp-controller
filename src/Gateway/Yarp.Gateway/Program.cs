@@ -4,6 +4,7 @@ using Yarp.Gateway.Authentication;
 using Yarp.Gateway.Authentication.Options;
 using Yarp.Gateway.Configuration;
 using Yarp.Gateway.Observability;
+using Yarp.Gateway.YarpComponents.TransformProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,8 +47,7 @@ builder.Services.AddW3CLogging(logging =>
     logging.AdditionalRequestHeaders.Add("x-forwarded-for");
 });
 
-var gatewayAuthSettingOptions = builder.Configuration.GetSection(GatewayAuthConfiguration.JsonSectionName).Get<GatewayAuthConfiguration>();
-builder.Services.AddYarpAuthentication(gatewayAuthSettingOptions);
+builder.Services.AddYarpAuthentication(GatewayAuthConfiguration.GatewayAuthSettingOptions(builder.Configuration));
 
 builder.Services.AddHttpClient();
 builder.Services.AddHttpForwarder();
@@ -55,7 +55,8 @@ builder.Services.AddHttpForwarder();
 // Add the reverse proxy capability to the server
 builder.Services
        .AddReverseProxy()
-       .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+       .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
+       .AddTransforms<AuthenticationTokenTransformProvider>();
 
 builder.Services.AddYarpMetrics();
 

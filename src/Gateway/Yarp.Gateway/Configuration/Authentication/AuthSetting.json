@@ -1,10 +1,10 @@
 ﻿{
   "GatewayAuthSetting": {
-    "Default": "Jwt",
+    "Default": "Opid",
     "Jwt": {
-      "Authority": "https://localhost:8443",
-      "Audience": "",
-      "RequireHttpsMetadata": true
+      "Authority": "http://localhost:8080/realms/master",
+      "Audience": "lab_api",
+      "RequireHttpsMetadata": false
     },
     "Opid": {
       "ClientId": "test_client",
@@ -12,6 +12,7 @@
       "Authority": "http://localhost:8080/realms/master/",
       "WebApiAudience": [
         "profile",
+        "lab_api",
         "roles"
       ],
       "LoginApplicationName": "my_app",

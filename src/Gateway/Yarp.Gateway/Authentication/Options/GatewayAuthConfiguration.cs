@@ -14,4 +14,9 @@ public class GatewayAuthConfiguration
 
     [JsonPropertyName("Opid")]
     public OpidAuthConfiguration? Opid { get; init; }
+
+    public static GatewayAuthConfiguration? GatewayAuthSettingOptions(ConfigurationManager builderConfiguration)
+    {
+        return builderConfiguration.GetSection(JsonSectionName).Get<GatewayAuthConfiguration>();
+    }
 }
