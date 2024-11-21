@@ -1,10 +1,14 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
 using Yarp.Gateway.Authentication;
 using Yarp.Gateway.Authentication.Options;
 using Yarp.Gateway.Configuration;
 using Yarp.Gateway.Observability;
+using Yarp.Gateway.YarpComponents;
 using Yarp.Gateway.YarpComponents.TransformProviders;
+using Yarp.ReverseProxy.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +52,14 @@ builder.Services.AddW3CLogging(logging =>
 });
 
 builder.Services.AddYarpAuthentication(GatewayAuthConfiguration.GatewayAuthSettingOptions(builder.Configuration));
+
+builder.Services.AddAuthorizationBuilder()
+       .AddPolicy("GatewayManager", policy =>
+       {
+           policy.RequireAuthenticatedUser();
+           policy.RequireRole("Gateway-Administrator");
+           // policy.RequireClaim("scope", "gateway-manager");
+       });
 
 builder.Services.AddHttpClient();
 builder.Services.AddHttpForwarder();
@@ -96,6 +108,10 @@ app.UseCors("CorsPolicy");
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+app.MapGet("/gateway-config",
+           [Authorize("GatewayManager")]([FromServices] IProxyConfigProvider proxyConfig) =>
+           proxyConfig.GetConfig().ToGatewayConfig());
 
 app.MapReverseProxy();
 
