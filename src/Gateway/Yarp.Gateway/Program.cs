@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
+using OpenTelemetry;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 using Yarp.Gateway.Authentication;
 using Yarp.Gateway.Authentication.Options;
 using Yarp.Gateway.Configuration;
@@ -26,6 +29,13 @@ builder.Services.AddCors(options =>
                          .AllowAnyHeader()
                          .AllowAnyMethod();
     });
+});
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
+                               ForwardedHeaders.XForwardedProto |
+                               ForwardedHeaders.XForwardedHost;
 });
 
 builder.Services.AddHealthChecks();
@@ -72,12 +82,14 @@ builder.Services
 
 builder.Services.AddYarpMetrics();
 
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
+builder.Services.ConfigureOpenTelemetryMeterProvider(providerBuilder =>
 {
-    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor |
-                               ForwardedHeaders.XForwardedProto |
-                               ForwardedHeaders.XForwardedHost;
+    providerBuilder.AddMeter("Microsoft.AspNetCore.Hosting",
+                             "Microsoft.AspNetCore.Server.Kestrel");
 });
+
+builder.Services.AddOpenTelemetry()
+       .UseOtlpExporter();
 
 var app = builder.Build();
 
