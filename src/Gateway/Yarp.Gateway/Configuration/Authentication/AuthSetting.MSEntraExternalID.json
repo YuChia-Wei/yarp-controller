@@ -1,0 +1,28 @@
+﻿{
+  "GatewayAuthSetting": {
+    "Default": "Opid",
+    "Jwt": {
+      "Authority": "https://<subdomain>.ciamlogin.com/<Directory (tenant) ID>/v2.0",
+      "Audience": "<Application (client) ID>",
+      "RequireHttpsMetadata": false
+    },
+    "Opid": {
+      "ClientId": "<Application (client) ID>",
+      "ClientSecret": "<client-secret-value>",
+      "Authority": "https://<subdomain>.ciamlogin.com/<Directory (tenant) ID>/v2.0",
+      "WebApiAudience": [
+        "openid",
+        "profile",
+        "offline_access",
+        "api://<Application (client) ID>/web-api-lab"
+      ],
+      "LoginApplicationName": "my_app",
+      "LoginCookieName": "local_login",
+      "LoginCookieDomain": "",
+      "TicketStoreRedisServer": "localhost:6379",
+      "RequireHttpsMetadata": false,
+      "ResponseType": "code id_token",
+      "RefreshTokenAddress": "https://<subdomain>.ciamlogin.com/<Directory (tenant) ID>/oauth2/v2.0/token"
+    }
+  }
+}
