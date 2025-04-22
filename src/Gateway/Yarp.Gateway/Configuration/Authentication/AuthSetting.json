@@ -14,8 +14,8 @@
         "openid",
         "profile",
         "lab_api",
-        "roles"
-        "offline_access",
+        "roles",
+        "offline_access"
       ],
       "LoginApplicationName": "my_app",
       "LoginCookieName": "local_login",
