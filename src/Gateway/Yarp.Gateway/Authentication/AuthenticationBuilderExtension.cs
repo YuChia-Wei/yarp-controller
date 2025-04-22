@@ -174,18 +174,21 @@ public static class AuthenticationBuilderExtension
                    options.ClientSecret = authConfiguration.ClientSecret;
 
                    // 如果要改 redirect url 的時候要用這個
+                   // 預設是 /signin-oidc
                    // options.CallbackPath = "/auth-redirect-url";
 
                    options.RequireHttpsMetadata = authConfiguration.RequireHttpsMetadata;
                    options.ResponseType = authConfiguration.ResponseType;
                    // options.ResponseType = OpenIdConnectResponseType.Code;
+                   // 預設就是 form post，目前沒有碰到需要改變的情境 (identity server 4 / keycloak / microsoft entra id 都用 form post)
                    // options.ResponseMode = OpenIdConnectResponseMode.FormPost;
 
-                   // 沒有清除的話，預設 scope 裡面有一個 profile 的項目
+                   // 沒有清除的話，預設 scope 裡面有一個 profile 的項目，因為預期所有的 scope 都統一由設定檔給予，所以這邊要先清掉
                    options.Scope.Clear();
 
                    //要讓 .net 預設的 openid 認證成功需要這個 Scope
-                   options.Scope.Add(OpenIdConnectScope.OpenId);
+                   // 應該全部的 scope 都由設定檔控制
+                   // options.Scope.Add(OpenIdConnectScope.OpenId);
 
                    // 從設定檔中取得 OAuth Scope
                    foreach (var item in authConfiguration.WebApiAudience)
@@ -194,14 +197,17 @@ public static class AuthenticationBuilderExtension
                    }
 
                    // 跟 OAuth Server 要 Refresh Token
-                   options.Scope.Add(OpenIdConnectScope.OfflineAccess);
+                   // 2025-04-22: 應該全部的 scope 都由設定檔控制
+                   // options.Scope.Add(OpenIdConnectScope.OfflineAccess);
 
-                   // if true , cookies ExpiresUtc will be use id_token expires time
+                   // if true, cookies ExpiresUtc will be use id_token expires time
                    // options.UseTokenLifetime = true;
 
                    options.SaveTokens = true;
 
-                   options.GetClaimsFromUserInfoEndpoint = true;
+                   // 如果採用 microsoft entra id 這邊就必須設定為 false，不然會因為另外使用 api 去跟 MS Graph 調用使用者資料
+                   // 導致 scope 需要增加 "User.Read" 才能正常通過 auth，並且拿到的 access token 中的 audience 會變成 MS Graph 的 audience
+                   options.GetClaimsFromUserInfoEndpoint = false;
 
                    options.TokenValidationParameters = new TokenValidationParameters
                    {
