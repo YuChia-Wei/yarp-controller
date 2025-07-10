@@ -3,7 +3,7 @@
     "Clusters": {
       "httpbin-cluster": {
         "Destinations": {
-          "destination1": {
+          "first_destination": {
             "Address": "http://test-backend-api"
           }
         }

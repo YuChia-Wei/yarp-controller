@@ -1,9 +1,9 @@
-﻿FROM ghcr.io/yuchia-wei/otel-dotnet-auto-instrumentation:7.0-booworm-slim AS base
+﻿FROM ghcr.io/yuchia-wei/otel-dotnet-auto-instrumentation:8.0-bookworm-slim AS base
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 
-FROM mcr.microsoft.com/dotnet/sdk:7.0-booworm-slim AS build
+FROM mcr.microsoft.com/dotnet/sdk:8.0-bookworm-slim AS build
 ARG BuildConfiguration=Debug
 WORKDIR /src
 COPY ["nuget.config", "."]

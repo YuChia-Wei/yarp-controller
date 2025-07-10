@@ -3,12 +3,14 @@
     "Routes": {
       "httpbin-route": {
         "ClusterId": "httpbin-cluster",
+        "AuthorizationPolicy": "Anonymous",
+        "CorsPolicy": "CorsPolicy",
         "Match": {
-          "Path": "/httpbin/{**catch-all}"
+          "Path": "/httpbin/{**catchall}"
         },
         "Transforms": [
           {
-            "PathPattern": "{**catch-all}"
+            "PathRemovePrefix": "/httpbin"
           }
         ]
       }

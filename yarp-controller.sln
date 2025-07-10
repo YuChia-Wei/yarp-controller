@@ -41,6 +41,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "gateway-config", "gateway-c
 	ProjectSection(SolutionItems) = preProject
 		docker\gateway-config\ReverseProxy-RoutesSetting.json = docker\gateway-config\ReverseProxy-RoutesSetting.json
 		docker\gateway-config\ReverseProxy-ClustersSetting.json = docker\gateway-config\ReverseProxy-ClustersSetting.json
+		docker\gateway-config\AuthSetting.json = docker\gateway-config\AuthSetting.json
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "otel-config", "otel-config", "{4D1E2B2A-B1EE-46C4-89EC-CF5A74F952FE}"

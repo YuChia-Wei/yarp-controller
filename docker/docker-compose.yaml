@@ -12,13 +12,14 @@ services:
     env_file:
       - ./env-file/yarp-gateway-otel.env
     volumes:
-      - ./gateway-config/ReverseProxy-ClustersSetting.json:/app/ReverseProxy-ClustersSetting.json
-      - ./gateway-config/ReverseProxy-RoutesSetting.json:/app/ReverseProxy-RoutesSetting.json
+      - ./gateway-config/AuthSetting.json:/app/Configuration/Authentication/AuthSetting.json
+      - ./gateway-config/ReverseProxy-ClustersSetting.json:/app/Configuration/ReverseProxy/ClustersSetting.json
+      - ./gateway-config/ReverseProxy-RoutesSetting.json:/app/Configuration/ReverseProxy/RoutesSetting.json
     depends_on:
-      - yarp-controller-webapi
+#      - yarp-controller-webapi
       - test-backend-api
     ports:
-      - "8080:80"
+      - "8080:8080"
 
   yarp-controller-webapi:
     container_name: yarp-controller-webapi

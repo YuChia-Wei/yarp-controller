@@ -9,28 +9,28 @@
 
 exporters:
   # https://github.com/open-telemetry/opentelemetry-collector/blob/main/exporter/loggingexporter/README.md
-  logging:
+  debug:
     verbosity: normal
-  
+
   # https://github.com/open-telemetry/opentelemetry-collector-contrib/blob/main/exporter/lokiexporter/README.md
   loki:
     endpoint: http://loki:3100/loki/api/v1/push
     tls:
       insecure: true
-  
+
   # https://github.com/open-telemetry/opentelemetry-collector/blob/main/exporter/otlpexporter/README.md
   otlp/tempo:
     endpoint: http://tempo:4317
     tls:
       insecure: true
-  
+
   prometheus:
     endpoint: 0.0.0.0:8889
     send_timestamps: true
     metric_expiration: 180m
     resource_to_telemetry_conversion:
       enabled: true
-  
+
   prometheusremotewrite:
     endpoint: "http://remote-prometheus:9090/api/v1/push"
     tls:
@@ -46,7 +46,7 @@ processors:
     # 25% of limit up to 2G
     spike_limit_mib: 512
     check_interval: 5s
-  
+
   # for loki
   resource:
     attributes:
