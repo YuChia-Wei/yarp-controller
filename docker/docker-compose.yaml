@@ -37,17 +37,6 @@ services:
       - redis
       - postgres
 
-  otel-collector-contrib:
-    image: otel/opentelemetry-collector-contrib:0.88.0
-    restart: always
-    container_name: otel-collector-contrib
-    command: [ "--config=/etc/otel-collector.yaml" ]
-    volumes:
-      - ./otel-config/otel-collector-contrib-config.yaml:/etc/otel-collector.yaml
-    ports:
-      - "4317:4317"
-      - "4318:4318"
-
   postgres:
     image: postgres:16.0-alpine
     restart: always
@@ -79,6 +68,18 @@ services:
     #networks:
       #- yarp-network
 
+  otel-collector-contrib:
+    image: otel/opentelemetry-collector-contrib:0.113.0
+    restart: always
+    container_name: otel-collector-contrib
+    command: [ "--config=/etc/otel-collector.yaml" ]
+    volumes:
+      - ./otel-config/otel-collector-contrib-config.yaml:/etc/otel-collector.yaml
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "8889"
+
   # 以下參考 grafana tempo 範例
   # via: https://github.com/grafana/tempo/blob/main/example/docker-compose/otel-collector/docker-compose.yaml
   tempo:
@@ -100,6 +101,7 @@ services:
       - --config.file=/etc/prometheus.yaml
       - --web.enable-remote-write-receiver
       - --enable-feature=exemplar-storage
+      - --enable-feature=native-histograms
     volumes:
       - ./grafana-config/prometheus.yaml:/etc/prometheus.yaml
     ports:
@@ -107,7 +109,7 @@ services:
 
   grafana:
     container_name: grafana
-    image: grafana/grafana:9.4.3
+    image: grafana/grafana:11.0.0
     volumes:
       - ./grafana-config/provisioning/datasources/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
       - ./grafana-config/provisioning/dashboards:/etc/grafana/provisioning/dashboards
