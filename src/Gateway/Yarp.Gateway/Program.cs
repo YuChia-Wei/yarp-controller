@@ -113,6 +113,7 @@ builder.Services.AddOpenTelemetry()
                .AddRuntimeInstrumentation()
                .AddHttpClientInstrumentation()
                .AddAspNetCoreInstrumentation()
+               .AddProcessInstrumentation()
                .AddOtlpExporter((exporterOptions, metricReaderOptions) =>
                {
                    var endpoint = Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT");
