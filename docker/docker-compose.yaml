@@ -18,8 +18,9 @@ services:
     depends_on:
 #      - yarp-controller-webapi
       - test-backend-api
+      - keycloak
     ports:
-      - "8080:8080"
+      - "8888:8080"
 
   yarp-controller-webapi:
     container_name: yarp-controller-webapi
@@ -144,6 +145,19 @@ services:
     image: kennethreitz/httpbin
     container_name: test-backend-api
     restart: always
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.3
+    container_name: keycloak
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    command: start-dev --import-realm
+    volumes:
+      - ./keycloak/export:/opt/keycloak/data/import
+    ports:
+      - "8080:8080"
+      - "8443:8443"
 
 #networks:
 #  yarp-network:

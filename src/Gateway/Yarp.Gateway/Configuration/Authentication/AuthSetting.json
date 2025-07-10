@@ -13,7 +13,6 @@
       "WebApiAudience": [
         "openid",
         "profile",
-        "lab_api",
         "roles",
         "offline_access"
       ],
@@ -22,7 +21,7 @@
       "LoginCookieDomain": "",
       "TicketStoreRedisServer": "localhost:6379",
       "RequireHttpsMetadata": false,
-      "ResponseType": "code id_token",
+      "ResponseType": "code",
       "RefreshTokenAddress": "http://localhost:8080/realms/master/protocol/openid-connect/token"
     }
   }

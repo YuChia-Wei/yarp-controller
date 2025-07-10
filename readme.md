@@ -14,7 +14,7 @@
 docker run -d -p 8080:8080 -p 8443:8443 \
     -e KEYCLOAK_ADMIN=user \
     -e KEYCLOAK_ADMIN_PASSWORD=password \
-    quay.io/keycloak/keycloak start-dev
+    quay.io/keycloak/keycloak:26.3 start-dev
 ```
 
 ### import test client
