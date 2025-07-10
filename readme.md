@@ -4,11 +4,11 @@
 
 管理器部分仍在開發中，Gateway 部分已經大致完成，相關說明後述。
 
-## key clock prepare
+## key cloak prepares
 
-由於整個系統都基於 OpenId Connect 進行身分認證，因此這邊需要準備一套 keyclock 來協助開發與身分認證相關的測試。
+由於整個系統都基於 OpenId Connect 進行身分認證，因此這邊需要準備一套 keycloak 來協助開發與身分認證相關的測試。
 
-### run keyclock in docker
+### run keycloak in docker
 
 ```bash
 docker run -d -p 8080:8080 -p 8443:8443 \
@@ -19,7 +19,7 @@ docker run -d -p 8080:8080 -p 8443:8443 \
 
 ### import test client
 
-client id testing json : [link](./doc/test_client.json)
+client id testing json : [link](./keycloak/test_client.json)
 
 ## Yarp Gateway
 
