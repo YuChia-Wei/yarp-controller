@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using OpenTelemetry;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Yarp.Gateway.Authentication;
@@ -82,14 +83,47 @@ builder.Services
 
 builder.Services.AddYarpMetrics();
 
-builder.Services.ConfigureOpenTelemetryMeterProvider(providerBuilder =>
-{
-    providerBuilder.AddMeter("Microsoft.AspNetCore.Hosting",
-                             "Microsoft.AspNetCore.Server.Kestrel");
-});
-
 builder.Services.AddOpenTelemetry()
-       .UseOtlpExporter();
+       .WithLogging(loggerProviderBuilder =>
+       {
+           loggerProviderBuilder.AddOtlpExporter();
+       })
+       .WithTracing(tracerProviderBuilder =>
+       {
+           tracerProviderBuilder
+               // 如果專案內有自訂追蹤資料的話，就需要將自訂的 source name 加進去
+               .AddSource(ObservabilitySource.Name)
+               .AddHttpClientInstrumentation()
+               .AddAspNetCoreInstrumentation()
+               // .AddEntityFrameworkCoreInstrumentation()
+               .AddOtlpExporter(exporterOptions =>
+               {
+                   var endpoint = Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT");
+                   exporterOptions.Endpoint = !string.IsNullOrWhiteSpace(endpoint)
+                                                  ? new Uri(endpoint)
+                                                  : new Uri("http://localhost:4317");
+                   exporterOptions.ExportProcessorType = ExportProcessorType.Batch;
+               });
+       })
+       .WithMetrics(meterProviderBuilder =>
+       {
+           meterProviderBuilder
+               // 如果專案內有自訂 Metrics 資料的話，就需要將自訂的 source name 加進去
+               .AddMeter(ObservabilitySource.Name)
+               .AddRuntimeInstrumentation()
+               .AddHttpClientInstrumentation()
+               .AddAspNetCoreInstrumentation()
+               .AddOtlpExporter((exporterOptions, metricReaderOptions) =>
+               {
+                   var endpoint = Environment.GetEnvironmentVariable("OTEL_EXPORTER_OTLP_ENDPOINT");
+                   exporterOptions.Endpoint = !string.IsNullOrWhiteSpace(endpoint)
+                                                  ? new Uri(endpoint)
+                                                  : new Uri("http://localhost:4317");
+                   exporterOptions.ExportProcessorType = ExportProcessorType.Batch;
+
+                   metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 1000;
+               });
+       });
 
 var app = builder.Build();
 

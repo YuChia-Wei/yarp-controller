@@ -7,5 +7,5 @@ namespace Yarp.Gateway.Observability.Metrics;
 /// </summary>
 public static class GatewayMeter
 {
-    public static readonly Meter Meter = new("yarp.gateway.observability.library");
+    public static readonly Meter Meter = new(ObservabilitySource.Name);
 }
