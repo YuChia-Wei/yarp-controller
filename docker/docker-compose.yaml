@@ -16,6 +16,7 @@ services:
       - ./gateway-config/ReverseProxy-RoutesSetting.json:/app/ReverseProxy-RoutesSetting.json
     depends_on:
       - yarp-controller-webapi
+      - test-backend-api
     ports:
       - "8080:80"
 
@@ -135,6 +136,11 @@ services:
       - 9095:9095
     volumes:
       - ./grafana-config/loki-local.yaml:/etc/loki/config.yaml
+
+  test-backend-api:
+    image: kennethreitz/httpbin
+    container_name: test-backend-api
+    restart: always
 
 #networks:
 #  yarp-network:
