@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace Yarp.ControlPlant.WebApi.Models.Router;
 
 public class Router
