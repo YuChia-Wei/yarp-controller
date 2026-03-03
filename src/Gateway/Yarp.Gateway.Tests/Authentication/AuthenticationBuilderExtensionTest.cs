@@ -1,32 +1,33 @@
 ﻿using System;
-using FluentAssertions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
-using NUnit.Framework;
+using Xunit;
 using Yarp.Gateway.Authentication;
 using Yarp.Gateway.Authentication.Options;
 
 namespace Yarp.Gateway.Tests.Authentication;
 
-[TestFixture]
-[TestOf(typeof(AuthenticationBuilderExtension))]
 public class AuthenticationBuilderExtensionTest
 {
-    private ServiceCollection _serviceCollection;
+    private readonly ServiceCollection _serviceCollection;
     private GatewayAuthConfiguration? _gatewayAuthSettingOptions;
 
-    [SetUp]
-    public void SetUp()
+    public AuthenticationBuilderExtensionTest()
     {
         this._serviceCollection = new ServiceCollection();
     }
 
-    [Test]
+    [Fact]
     public void AddYarpAuthentication_GivenJwtOptions_ShouldSuccess()
     {
         this._gatewayAuthSettingOptions = new GatewayAuthConfiguration
         {
-            Default = DefaultAuthMethod.Jwt, Jwt = new JwtAuthConfiguration { Authority = "", Audience = "" }
+            Default = DefaultAuthMethod.Jwt,
+            Jwt = new JwtAuthConfiguration
+            {
+                Authority = "",
+                Audience = ""
+            }
         };
 
         this._serviceCollection.AddYarpAuthentication(this._gatewayAuthSettingOptions);
@@ -35,16 +36,14 @@ public class AuthenticationBuilderExtensionTest
 
         var authenticationSchemeProvider = buildServiceProvider.GetService<IAuthenticationSchemeProvider>();
 
-        authenticationSchemeProvider.Should().NotBeNull();
+        Assert.NotNull(authenticationSchemeProvider);
     }
 
-    [Test]
+    [Fact]
     public void AddYarpAuthentication_GivenNullOptions_ThrowException()
     {
         this._gatewayAuthSettingOptions = null;
 
-        var func = () => this._serviceCollection.AddYarpAuthentication(this._gatewayAuthSettingOptions);
-
-        func.Should().Throw<ArgumentNullException>();
+        Assert.Throws<ArgumentNullException>(() => this._serviceCollection.AddYarpAuthentication(this._gatewayAuthSettingOptions));
     }
 }

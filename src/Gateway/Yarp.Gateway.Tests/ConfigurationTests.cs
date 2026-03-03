@@ -1,16 +1,14 @@
 ﻿using System.IO;
 using System.Text;
-using FluentAssertions;
 using Microsoft.Extensions.Configuration;
-using NUnit.Framework;
+using Xunit;
 using Yarp.Gateway.Authentication.Options;
 
 namespace Yarp.Gateway.Tests;
 
-[TestFixture]
 public class ConfigurationTests
 {
-    [Test]
+    [Fact]
     public void ConfigurationSection_GetAuthConfiguration_Jwt_Success()
     {
         // Arrange
@@ -36,12 +34,13 @@ public class ConfigurationTests
         var appSettings = configuration.GetSection(GatewayAuthConfiguration.JsonSectionName).Get<GatewayAuthConfiguration>();
 
         // Assert
-        appSettings!.Default.Should().Be(DefaultAuthMethod.Jwt);
-        appSettings!.Opid.Should().BeNull();
-        appSettings!.Jwt.Should().NotBeNull();
+        Assert.NotNull(appSettings);
+        Assert.Equal(DefaultAuthMethod.Jwt, appSettings.Default);
+        Assert.Null(appSettings.Opid);
+        Assert.NotNull(appSettings.Jwt);
     }
 
-    [Test]
+    [Fact]
     public void ConfigurationSection_GetAuthConfiguration_Opid_Success()
     {
         // Arrange
@@ -51,7 +50,7 @@ public class ConfigurationTests
                              "Default": "Opid",
                              "Opid": {
                                "ClientId": "test_client",
-                               "ClientSecret": "6ZyOGaalxmk0NIZCg9w81lIU9bxnDL4P",
+                               "ClientSecret": "<CLIENT_SECRET_PLACEHOLDER>",
                                "Authority": "http://localhost:8080/realms/master/",
                                "WebApiAudience": [
                                  "profile",
@@ -78,8 +77,9 @@ public class ConfigurationTests
         var appSettings = configuration.GetSection(GatewayAuthConfiguration.JsonSectionName).Get<GatewayAuthConfiguration>();
 
         // Assert
-        appSettings!.Default.Should().Be(DefaultAuthMethod.Opid);
-        appSettings!.Opid.Should().NotBeNull();
-        appSettings!.Jwt.Should().BeNull();
+        Assert.NotNull(appSettings);
+        Assert.Equal(DefaultAuthMethod.Opid, appSettings.Default);
+        Assert.NotNull(appSettings.Opid);
+        Assert.Null(appSettings.Jwt);
     }
 }
