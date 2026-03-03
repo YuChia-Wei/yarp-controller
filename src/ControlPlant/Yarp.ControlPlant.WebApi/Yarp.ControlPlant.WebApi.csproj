@@ -15,14 +15,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mediator.Abstractions" Version="3.0.1" />
-    <PackageReference Include="Mediator.SourceGenerator" Version="3.0.1">
+    <PackageReference Include="Mediator.Abstractions" Version="3.0.2" />
+    <PackageReference Include="Mediator.SourceGenerator" Version="3.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
     <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="10.0.1" />
-    <PackageReference Include="Swashbuckle.AspNetCore.ReDoc" Version="10.0.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore.ReDoc" Version="10.1.7" />
   </ItemGroup>
 
   <ItemGroup>
