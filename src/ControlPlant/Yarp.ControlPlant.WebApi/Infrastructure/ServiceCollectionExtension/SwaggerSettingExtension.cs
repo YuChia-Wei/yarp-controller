@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.Filters;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Yarp.ControlPlant.WebApi.Infrastructure.Options;
@@ -73,7 +73,7 @@ public static class SwaggerSettingExtension
             // 掛載 ExampleFilter
             options.ExampleFilters();
 
-            //Add Swagger OAuth Setting 
+            //Add Swagger OAuth Setting
             options.OperationFilter<AuthorizeCheckOperationFilter>();
 
             //Add Custom Header

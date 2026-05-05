@@ -1,4 +1,4 @@
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Yarp.ControlPlant.WebApi.Infrastructure.SwaggerFilters;
@@ -16,15 +16,13 @@ public class EmployeeStateKeyParameterOperationFilter : IOperationFilter
     /// <param name="context">The context.</param>
     public void Apply(OpenApiOperation operation, OperationFilterContext context)
     {
-        operation.Parameters ??= new List<OpenApiParameter>();
-
-        operation.Parameters.Add(new OpenApiParameter
+        operation.Parameters?.Add(new OpenApiParameter
         {
             Name = "StateKey",
             In = ParameterLocation.Header,
             Required = false,
             Description = "Employee State Key",
-            Schema = new OpenApiSchema { Type = "string" }
+            Schema = new OpenApiSchema { Type = JsonSchemaType.String }
         });
     }
 }

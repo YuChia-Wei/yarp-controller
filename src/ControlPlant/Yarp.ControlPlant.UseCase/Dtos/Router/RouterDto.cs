@@ -1,3 +1,5 @@
+using System.Collections.Immutable;
+
 namespace Yarp.ControlPlant.UseCase.Dtos.Router;
 
 public class RouterDto

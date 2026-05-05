@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Yarp.ReverseProxy.ControlPlant.Entity.Forwarder;
 
 namespace Yarp.ControlPlant.UseCase.Dtos.Cluster;
