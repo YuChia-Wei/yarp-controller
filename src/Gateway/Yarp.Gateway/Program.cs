@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -7,6 +8,7 @@ using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 using Yarp.Gateway.Authentication;
+using Yarp.Gateway.Authentication.MySSO.Configuration;
 using Yarp.Gateway.Authentication.Options;
 using Yarp.Gateway.Configuration;
 using Yarp.Gateway.Observability;
@@ -62,7 +64,8 @@ builder.Services.AddW3CLogging(logging =>
     logging.AdditionalRequestHeaders.Add("x-forwarded-for");
 });
 
-builder.Services.AddYarpAuthentication(GatewayAuthConfiguration.GatewayAuthSettingOptions(builder.Configuration));
+var gatewayAuthConfiguration = GatewayAuthConfiguration.GatewayAuthSettingOptions(builder.Configuration);
+builder.Services.AddYarpAuthentication(gatewayAuthConfiguration);
 
 builder.Services.AddAuthorizationBuilder()
        .AddPolicy("GatewayManager", policy =>
@@ -156,10 +159,35 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
+if (gatewayAuthConfiguration?.MySSO is not null)
+{
+    app.MapGet(
+        gatewayAuthConfiguration.MySSO.LoginPath.Value!,
+        (string? returnUrl) =>
+        {
+            var redirectUri = IsLocalReturnUrl(returnUrl)
+                                  ? returnUrl!
+                                  : "/";
+            return Results.Challenge(
+                new AuthenticationProperties
+                {
+                    RedirectUri = redirectUri
+                },
+                [MySsoAuthenticationDefaults.RemoteScheme]);
+        });
+}
+
 app.MapGet("/gateway-config",
-           [Authorize("GatewayManager")]([FromServices] IProxyConfigProvider proxyConfig) =>
+           [Authorize("GatewayManager")] ([FromServices] IProxyConfigProvider proxyConfig) =>
            proxyConfig.GetConfig().ToGatewayConfig());
 
 app.MapReverseProxy();
 
 app.Run();
+
+static bool IsLocalReturnUrl(string? returnUrl)
+{
+    return !string.IsNullOrWhiteSpace(returnUrl) &&
+           returnUrl[0] == '/' &&
+           (returnUrl.Length == 1 || returnUrl[1] is not '/' and not '\\');
+}

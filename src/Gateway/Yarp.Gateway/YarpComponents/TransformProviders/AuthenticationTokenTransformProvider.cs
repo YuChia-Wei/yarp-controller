@@ -1,6 +1,7 @@
-﻿using System.Net.Http.Headers;
+using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Microsoft.Net.Http.Headers;
 using Yarp.ReverseProxy.Transforms;
 using Yarp.ReverseProxy.Transforms.Builder;
 
@@ -41,6 +42,16 @@ internal class AuthenticationTokenTransformProvider : ITransformProvider
             if (!string.IsNullOrEmpty(tokenAsync))
             {
                 transformContext.ProxyRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokenAsync);
+                return;
+            }
+
+            var authorization = transformContext.HttpContext.Request.Headers[HeaderNames.Authorization].FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(authorization) &&
+                AuthenticationHeaderValue.TryParse(authorization, out var authorizationHeader) &&
+                string.Equals(authorizationHeader.Scheme, "Bearer", StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(authorizationHeader.Parameter))
+            {
+                transformContext.ProxyRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authorizationHeader.Parameter);
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using System.Text.Json;
 using IdentityModel;
 using IdentityModel.Client;
@@ -7,9 +7,19 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
 using StackExchange.Redis;
+using Yarp.Gateway.Authentication.ExternalToken.Configuration;
+using Yarp.Gateway.Authentication.ExternalToken.Handlers;
+using Yarp.Gateway.Authentication.ExternalToken.Services;
+using Yarp.Gateway.Authentication.MySSO.Configuration;
+using Yarp.Gateway.Authentication.MySSO.Handlers;
+using Yarp.Gateway.Authentication.MySSO.Options;
+using Yarp.Gateway.Authentication.MySSO.Services;
 using Yarp.Gateway.Authentication.OpenIdConnect;
 using Yarp.Gateway.Authentication.Options;
 
@@ -34,6 +44,101 @@ public static class AuthenticationBuilderExtension
             options.RequireHttpsMetadata = jwtAuthConfiguration.RequireHttpsMetadata;
             options.Audience = jwtAuthConfiguration.Audience;
         });
+
+        return builder;
+    }
+
+    /// <summary>
+    /// 加入每次 request 都會呼叫外部服務驗證 token 或 key 的 authentication scheme。
+    /// </summary>
+    /// <param name="builder">ASP.NET Core authentication builder。</param>
+    /// <param name="authConfiguration">外部 Token 驗證設定。</param>
+    public static AuthenticationBuilder AddExternalTokenAuthentication(
+        this AuthenticationBuilder builder,
+        ExternalTokenAuthenticationConfiguration authConfiguration)
+    {
+        builder.Services.TryAddSingleton<IExternalTokenAuthenticationClient, ExternalTokenAuthenticationHttpClient>();
+        builder.Services.AddHttpClient(ExternalTokenAuthenticationDefaults.BackchannelHttpClientName, client =>
+        {
+            client.Timeout = TimeSpan.FromSeconds(authConfiguration.BackchannelTimeoutSeconds);
+        });
+
+        builder.AddScheme<ExternalTokenAuthenticationConfiguration, ExternalTokenAuthenticationHandler>(
+            ExternalTokenAuthenticationDefaults.AuthenticationScheme,
+            options =>
+            {
+                options.AppId = authConfiguration.AppId;
+                options.AuthorizationHeaderName = authConfiguration.AuthorizationHeaderName;
+                options.TokenScheme = authConfiguration.TokenScheme;
+                options.KeyScheme = authConfiguration.KeyScheme;
+                options.AcceptBearerToken = authConfiguration.AcceptBearerToken;
+                options.IgnoreJwtBearerToken = authConfiguration.IgnoreJwtBearerToken;
+                options.TokenValidationEndpoint = authConfiguration.TokenValidationEndpoint;
+                options.KeyExchangeEndpoint = authConfiguration.KeyExchangeEndpoint;
+                options.BackchannelTimeoutSeconds = authConfiguration.BackchannelTimeoutSeconds;
+            });
+
+        return builder;
+    }
+
+    /// <summary>
+    /// 加入 MySSO form-post remote authentication flow 與獨立 session Cookie。
+    /// </summary>
+    /// <param name="builder">ASP.NET Core authentication builder。</param>
+    /// <param name="authConfiguration">MySSO remote authentication 設定。</param>
+    public static AuthenticationBuilder AddMySsoAuthentication(
+        this AuthenticationBuilder builder,
+        MySsoAuthenticationConfiguration authConfiguration)
+    {
+        builder.Services.TryAddSingleton<IMySsoTokenExchangeClient, MySsoTokenExchangeHttpClient>();
+        builder.Services.TryAddEnumerable(
+            ServiceDescriptor.Singleton<
+                IPostConfigureOptions<MySsoAuthenticationOptions>,
+                MySsoAuthenticationPostConfigureOptions>());
+
+        builder.AddCookie(
+            MySsoAuthenticationDefaults.SessionScheme,
+            options =>
+            {
+                options.Cookie.Name = authConfiguration.SessionCookieName;
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SameSite = authConfiguration.SessionCookieSameSite;
+                options.Cookie.SecurePolicy = authConfiguration.SessionCookieSecurePolicy;
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(authConfiguration.SessionIdleTimeoutMinutes);
+                options.SlidingExpiration = true;
+
+                if (!string.IsNullOrWhiteSpace(authConfiguration.SessionCookieDomain))
+                {
+                    options.Cookie.Domain = authConfiguration.SessionCookieDomain;
+                }
+
+                if (!string.IsNullOrWhiteSpace(authConfiguration.TicketStoreRedisServer))
+                {
+                    options.SessionStore = new RedisCacheTicketStore(
+                        authConfiguration.SessionStoreKeyPrefix,
+                        authConfiguration.TicketStoreRedisServer);
+                }
+            });
+
+        builder.AddRemoteScheme<MySsoAuthenticationOptions, MySsoAuthenticationHandler>(
+            MySsoAuthenticationDefaults.RemoteScheme,
+            null,
+            options =>
+            {
+                options.AuthorizationEndpoint = authConfiguration.AuthorizationEndpoint;
+                options.TokenExchangeEndpoint = authConfiguration.TokenExchangeEndpoint;
+                options.AppId = authConfiguration.AppId;
+                options.CallbackPath = authConfiguration.CallbackPath;
+                options.TokenParameterName = authConfiguration.TokenParameterName;
+                options.StateParameterName = authConfiguration.StateParameterName;
+                options.AppIdParameterName = authConfiguration.AppIdParameterName;
+                options.RedirectUriParameterName = authConfiguration.RedirectUriParameterName;
+                options.AllowQueryStringCallback = authConfiguration.AllowQueryStringCallback;
+                options.AdditionalAuthorizationParameters = authConfiguration.AdditionalAuthorizationParameters;
+                options.SignInScheme = MySsoAuthenticationDefaults.SessionScheme;
+                options.BackchannelTimeout = TimeSpan.FromSeconds(authConfiguration.BackchannelTimeoutSeconds);
+                options.SaveTokens = true;
+            });
 
         return builder;
     }
@@ -107,6 +212,15 @@ public static class AuthenticationBuilderExtension
 
                            var now = DateTimeOffset.UtcNow;
                            var expiresAt = cookieContext.Properties.GetTokenValue("expires_at");
+                           if (string.IsNullOrWhiteSpace(expiresAt))
+                           {
+                               logger.LogWarning("OnValidatePrincipal - Access Token Expiration Not Found!");
+
+                               cookieContext.RejectPrincipal();
+                               await cookieContext.HttpContext.SignOutAsync().ConfigureAwait(false);
+                               return;
+                           }
+
                            var accessTokenExpiration = DateTimeOffset.Parse(expiresAt);
 
                            var timeRemaining = accessTokenExpiration.Subtract(now);
@@ -248,6 +362,12 @@ public static class AuthenticationBuilderExtension
     {
         ArgumentNullException.ThrowIfNull(gatewayAuthConfiguration);
 
+        var authenticationSchemeCount =
+            (gatewayAuthConfiguration.Jwt is null ? 0 : 1) +
+            (gatewayAuthConfiguration.MySSO is null ? 0 : 1) +
+            (gatewayAuthConfiguration.ExternalToken is null ? 0 : 1);
+        var usePolicyScheme = authenticationSchemeCount > 1;
+
         AuthenticationBuilder authenticationBuilder;
         switch (gatewayAuthConfiguration.Default)
         {
@@ -267,7 +387,35 @@ public static class AuthenticationBuilderExtension
             case DefaultAuthMethod.Jwt:
                 ArgumentNullException.ThrowIfNull(gatewayAuthConfiguration.Jwt);
 
-                authenticationBuilder = serviceCollection.AddAuthentication(JwtBearerDefaults.AuthenticationScheme);
+                authenticationBuilder = serviceCollection.AddAuthentication(options =>
+                {
+                    options.DefaultScheme = usePolicyScheme
+                                                ? MySsoAuthenticationDefaults.PolicyScheme
+                                                : JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = options.DefaultScheme;
+                });
+                break;
+            case DefaultAuthMethod.MySSO:
+                ArgumentNullException.ThrowIfNull(gatewayAuthConfiguration.MySSO);
+
+                authenticationBuilder = serviceCollection.AddAuthentication(options =>
+                {
+                    options.DefaultScheme = usePolicyScheme
+                                                ? MySsoAuthenticationDefaults.PolicyScheme
+                                                : MySsoAuthenticationDefaults.SessionScheme;
+                    options.DefaultChallengeScheme = MySsoAuthenticationDefaults.RemoteScheme;
+                });
+                break;
+            case DefaultAuthMethod.ExternalToken:
+                ArgumentNullException.ThrowIfNull(gatewayAuthConfiguration.ExternalToken);
+
+                authenticationBuilder = serviceCollection.AddAuthentication(options =>
+                {
+                    options.DefaultScheme = usePolicyScheme
+                                                ? MySsoAuthenticationDefaults.PolicyScheme
+                                                : ExternalTokenAuthenticationDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = options.DefaultScheme;
+                });
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
@@ -281,6 +429,32 @@ public static class AuthenticationBuilderExtension
         if (gatewayAuthConfiguration.Jwt is not null)
         {
             authenticationBuilder.AddJwtAuthentication(gatewayAuthConfiguration.Jwt);
+        }
+
+        if (gatewayAuthConfiguration.MySSO is not null)
+        {
+            authenticationBuilder.AddMySsoAuthentication(gatewayAuthConfiguration.MySSO);
+        }
+
+        if (gatewayAuthConfiguration.ExternalToken is not null)
+        {
+            authenticationBuilder.AddExternalTokenAuthentication(gatewayAuthConfiguration.ExternalToken);
+        }
+
+        if (usePolicyScheme &&
+            gatewayAuthConfiguration.Default is DefaultAuthMethod.Jwt or DefaultAuthMethod.MySSO or DefaultAuthMethod.ExternalToken)
+        {
+            authenticationBuilder.AddPolicyScheme(
+                MySsoAuthenticationDefaults.PolicyScheme,
+                null,
+                options =>
+                {
+                    options.ForwardDefaultSelector = context =>
+                        SelectAuthenticationScheme(
+                            context,
+                            gatewayAuthConfiguration.Default,
+                            gatewayAuthConfiguration);
+                });
         }
     }
 
@@ -303,5 +477,56 @@ public static class AuthenticationBuilderExtension
         {
             id.AddClaims(claims);
         }
+    }
+
+    private static string DefaultScheme(DefaultAuthMethod defaultAuthMethod)
+    {
+        return defaultAuthMethod switch
+        {
+            DefaultAuthMethod.Jwt => JwtBearerDefaults.AuthenticationScheme,
+            DefaultAuthMethod.MySSO => MySsoAuthenticationDefaults.SessionScheme,
+            DefaultAuthMethod.ExternalToken => ExternalTokenAuthenticationDefaults.AuthenticationScheme,
+            _ => throw new ArgumentOutOfRangeException(nameof(defaultAuthMethod), defaultAuthMethod, null)
+        };
+    }
+
+    private static string SelectAuthenticationScheme(
+        HttpContext context,
+        DefaultAuthMethod defaultAuthMethod,
+        GatewayAuthConfiguration gatewayAuthConfiguration)
+    {
+        var authorization = context.Request.Headers[HeaderNames.Authorization].FirstOrDefault();
+
+        if (!string.IsNullOrWhiteSpace(authorization))
+        {
+            var externalToken = gatewayAuthConfiguration.ExternalToken;
+            if (externalToken is not null &&
+                (authorization.StartsWith($"{externalToken.TokenScheme} ", StringComparison.OrdinalIgnoreCase) ||
+                 authorization.StartsWith($"{externalToken.KeyScheme} ", StringComparison.OrdinalIgnoreCase)))
+            {
+                return ExternalTokenAuthenticationDefaults.AuthenticationScheme;
+            }
+
+            if (authorization.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                if (gatewayAuthConfiguration.Jwt is not null)
+                {
+                    return JwtBearerDefaults.AuthenticationScheme;
+                }
+
+                if (externalToken?.AcceptBearerToken == true)
+                {
+                    return ExternalTokenAuthenticationDefaults.AuthenticationScheme;
+                }
+            }
+        }
+
+        if (gatewayAuthConfiguration.MySSO is not null &&
+            context.Request.Cookies.ContainsKey(gatewayAuthConfiguration.MySSO.SessionCookieName))
+        {
+            return MySsoAuthenticationDefaults.SessionScheme;
+        }
+
+        return DefaultScheme(defaultAuthMethod);
     }
 }

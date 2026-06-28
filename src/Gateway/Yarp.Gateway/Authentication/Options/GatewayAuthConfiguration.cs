@@ -1,4 +1,4 @@
-﻿using System.Text.Json.Serialization;
+using System.Text.Json.Serialization;
 
 namespace Yarp.Gateway.Authentication.Options;
 
@@ -14,6 +14,18 @@ public class GatewayAuthConfiguration
 
     [JsonPropertyName("Opid")]
     public OpidAuthConfiguration? Opid { get; init; }
+
+    /// <summary>
+    /// MySSO form-post remote authentication 設定。
+    /// </summary>
+    [JsonPropertyName("MySSO")]
+    public MySsoAuthenticationConfiguration? MySSO { get; init; }
+
+    /// <summary>
+    /// 每次 request 都會呼叫外部服務驗證 token 或 key 的設定。
+    /// </summary>
+    [JsonPropertyName("ExternalToken")]
+    public ExternalTokenAuthenticationConfiguration? ExternalToken { get; init; }
 
     public static GatewayAuthConfiguration? GatewayAuthSettingOptions(ConfigurationManager builderConfiguration)
     {

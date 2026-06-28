@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
@@ -16,7 +16,10 @@ public class RedisCacheTicketStore : ITicketStore
 
     public RedisCacheTicketStore(string mainKey, string redisServerUrl)
     {
-        this._distributedCache = new RedisCache(new RedisCacheOptions { Configuration = redisServerUrl });
+        this._distributedCache = new RedisCache(new RedisCacheOptions
+        {
+            Configuration = redisServerUrl
+        });
         this._redisMainKey = mainKey;
     }
 

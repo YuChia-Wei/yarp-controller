@@ -1,0 +1,39 @@
+{
+  "GatewayAuthSetting": {
+    "Default": "MySSO",
+    "Jwt": {
+      "Authority": "https://platform-auth.example.com",
+      "Audience": "platform-api",
+      "RequireHttpsMetadata": true
+    },
+    "MySSO": {
+      "AuthorizationEndpoint": "https://mysso.example.com/login",
+      "TokenExchangeEndpoint": "https://platform-auth.example.com/api/auth/mysso/exchange",
+      "AppId": "gateway",
+      "CallbackPath": "/signin-mysso",
+      "LoginPath": "/auth/mysso/login",
+      "TokenParameterName": "token",
+      "StateParameterName": "state",
+      "AppIdParameterName": "app_id",
+      "RedirectUriParameterName": "redirect_uri",
+      "AllowQueryStringCallback": false,
+      "SessionCookieName": "MySSO.Session",
+      "SessionCookieSameSite": "Lax",
+      "SessionCookieSecurePolicy": "Always",
+      "SessionIdleTimeoutMinutes": 30,
+      "TicketStoreRedisServer": "redis:6379",
+      "SessionStoreKeyPrefix": "MySSO:Session:",
+      "BackchannelTimeoutSeconds": 30
+    },
+    "ExternalToken": {
+      "AppId": "gateway",
+      "TokenScheme": "ExternalToken",
+      "KeyScheme": "ExternalKey",
+      "AcceptBearerToken": false,
+      "IgnoreJwtBearerToken": true,
+      "TokenValidationEndpoint": "https://external-auth.example.com/token/check",
+      "KeyExchangeEndpoint": "https://external-auth.example.com/key/exchange",
+      "BackchannelTimeoutSeconds": 30
+    }
+  }
+}
