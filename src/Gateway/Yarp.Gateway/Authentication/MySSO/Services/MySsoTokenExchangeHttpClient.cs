@@ -50,4 +50,35 @@ internal sealed class MySsoTokenExchangeHttpClient(ILogger<MySsoTokenExchangeHtt
                                    .ConfigureAwait(false);
         return result ?? MySsoTokenExchangeResult.Fail("Empty MySSO token exchange response.");
     }
+
+    /// <inheritdoc />
+    public async Task<MySsoTokenExchangeResult> RefreshAsync(
+        string refreshToken,
+        MySsoAuthenticationOptions options,
+        CancellationToken cancellationToken)
+    {
+        if (options.RefreshTokenEndpoint is null)
+        {
+            throw new InvalidOperationException("MySSO refresh token endpoint is not configured.");
+        }
+
+        using var response = await options.Backchannel
+                                          .PostAsJsonAsync(
+                                              options.RefreshTokenEndpoint,
+                                              new MySsoRefreshTokenRequest(options.AppId, refreshToken),
+                                              SerializerOptions,
+                                              cancellationToken)
+                                          .ConfigureAwait(false);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            logger.LogWarning("Platform auth server returned HTTP {StatusCode} for MySSO token refresh.", (int)response.StatusCode);
+            return MySsoTokenExchangeResult.Fail($"HTTP {(int)response.StatusCode}");
+        }
+
+        var result = await response.Content
+                                   .ReadFromJsonAsync<MySsoTokenExchangeResult>(SerializerOptions, cancellationToken)
+                                   .ConfigureAwait(false);
+        return result ?? MySsoTokenExchangeResult.Fail("Empty MySSO token refresh response.");
+    }
 }

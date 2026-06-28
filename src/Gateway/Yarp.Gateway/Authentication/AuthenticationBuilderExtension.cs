@@ -90,11 +90,20 @@ public static class AuthenticationBuilderExtension
         this AuthenticationBuilder builder,
         MySsoAuthenticationConfiguration authConfiguration)
     {
+        // MySSO session cookie 只存放 ticket store key，access／refresh token 一律保存在 Redis ticket store，因此 Redis 連線為必填。
+        if (string.IsNullOrWhiteSpace(authConfiguration.TicketStoreRedisServer))
+        {
+            throw new InvalidOperationException("MySSO ticket store Redis server is not configured.");
+        }
+
         builder.Services.TryAddSingleton<IMySsoTokenExchangeClient, MySsoTokenExchangeHttpClient>();
         builder.Services.TryAddEnumerable(
             ServiceDescriptor.Singleton<
                 IPostConfigureOptions<MySsoAuthenticationOptions>,
                 MySsoAuthenticationPostConfigureOptions>());
+
+        var idleTimeout = TimeSpan.FromMinutes(authConfiguration.SessionIdleTimeoutMinutes);
+        var renewalInterval = TimeSpan.FromSeconds(authConfiguration.SessionRenewalIntervalSeconds);
 
         builder.AddCookie(
             MySsoAuthenticationDefaults.SessionScheme,
@@ -104,7 +113,7 @@ public static class AuthenticationBuilderExtension
                 options.Cookie.HttpOnly = true;
                 options.Cookie.SameSite = authConfiguration.SessionCookieSameSite;
                 options.Cookie.SecurePolicy = authConfiguration.SessionCookieSecurePolicy;
-                options.ExpireTimeSpan = TimeSpan.FromMinutes(authConfiguration.SessionIdleTimeoutMinutes);
+                options.ExpireTimeSpan = idleTimeout;
                 options.SlidingExpiration = true;
 
                 if (!string.IsNullOrWhiteSpace(authConfiguration.SessionCookieDomain))
@@ -112,12 +121,41 @@ public static class AuthenticationBuilderExtension
                     options.Cookie.Domain = authConfiguration.SessionCookieDomain;
                 }
 
-                if (!string.IsNullOrWhiteSpace(authConfiguration.TicketStoreRedisServer))
+                options.SessionStore = new RedisCacheTicketStore(
+                    authConfiguration.SessionStoreKeyPrefix,
+                    authConfiguration.TicketStoreRedisServer);
+
+                options.Events = new CookieAuthenticationEvents
                 {
-                    options.SessionStore = new RedisCacheTicketStore(
-                        authConfiguration.SessionStoreKeyPrefix,
-                        authConfiguration.TicketStoreRedisServer);
-                }
+                    OnRedirectToLogin = context =>
+                    {
+                        var cookieOptions = context.Options.Cookie.Build(context.HttpContext);
+                        context.Response.Cookies.Delete(authConfiguration.SessionCookieName, cookieOptions);
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        return Task.CompletedTask;
+                    },
+                    OnRedirectToAccessDenied = context =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        return Task.CompletedTask;
+                    },
+                    OnCheckSlidingExpiration = context =>
+                    {
+                        // 有操作就重置閒置時間：Always 每個請求都延長；Periodic 距上次續期超過間隔才延長以降低 Redis 寫入。
+                        var shouldRenew = authConfiguration.SessionRenewalMode == MySsoSessionRenewalMode.Always ||
+                                          context.ElapsedTime >= renewalInterval;
+                        context.ShouldRenew = shouldRenew;
+
+                        var now = (context.Options.TimeProvider ?? TimeProvider.System).GetUtcNow();
+                        var expiresAt = shouldRenew ? now.Add(idleTimeout) : context.Properties.ExpiresUtc;
+                        if (expiresAt is not null)
+                        {
+                            context.HttpContext.Items[MySsoAuthenticationDefaults.SessionExpiresItemKey] = expiresAt;
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
         builder.AddRemoteScheme<MySsoAuthenticationOptions, MySsoAuthenticationHandler>(
@@ -127,6 +165,7 @@ public static class AuthenticationBuilderExtension
             {
                 options.AuthorizationEndpoint = authConfiguration.AuthorizationEndpoint;
                 options.TokenExchangeEndpoint = authConfiguration.TokenExchangeEndpoint;
+                options.RefreshTokenEndpoint = authConfiguration.RefreshTokenEndpoint;
                 options.AppId = authConfiguration.AppId;
                 options.CallbackPath = authConfiguration.CallbackPath;
                 options.TokenParameterName = authConfiguration.TokenParameterName;
@@ -139,6 +178,27 @@ public static class AuthenticationBuilderExtension
                 options.BackchannelTimeout = TimeSpan.FromSeconds(authConfiguration.BackchannelTimeoutSeconds);
                 options.SaveTokens = true;
             });
+
+        builder.AddPolicyScheme(
+            MySsoAuthenticationDefaults.InteractiveScheme,
+            null,
+            options =>
+            {
+                options.ForwardAuthenticate = MySsoAuthenticationDefaults.SessionScheme;
+                options.ForwardChallenge = MySsoAuthenticationDefaults.RemoteScheme;
+                options.ForwardForbid = MySsoAuthenticationDefaults.SessionScheme;
+                options.ForwardSignIn = MySsoAuthenticationDefaults.SessionScheme;
+                options.ForwardSignOut = MySsoAuthenticationDefaults.SessionScheme;
+            });
+
+        builder.Services.AddAuthorizationBuilder()
+               .AddPolicy(
+                   MySsoAuthenticationDefaults.InteractivePolicy,
+                   policy =>
+                   {
+                       policy.AddAuthenticationSchemes(MySsoAuthenticationDefaults.InteractiveScheme);
+                       policy.RequireAuthenticatedUser();
+                   });
 
         return builder;
     }
@@ -403,7 +463,7 @@ public static class AuthenticationBuilderExtension
                     options.DefaultScheme = usePolicyScheme
                                                 ? MySsoAuthenticationDefaults.PolicyScheme
                                                 : MySsoAuthenticationDefaults.SessionScheme;
-                    options.DefaultChallengeScheme = MySsoAuthenticationDefaults.RemoteScheme;
+                    options.DefaultChallengeScheme = options.DefaultScheme;
                 });
                 break;
             case DefaultAuthMethod.ExternalToken:

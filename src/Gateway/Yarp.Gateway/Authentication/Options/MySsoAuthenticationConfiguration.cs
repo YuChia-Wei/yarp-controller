@@ -19,6 +19,11 @@ public sealed class MySsoAuthenticationConfiguration
     public Uri? TokenExchangeEndpoint { get; set; }
 
     /// <summary>
+    /// 平台 Auth Server 以 refresh token 換發新 access／refresh token 的端點；供 /auth/refresh 使用。
+    /// </summary>
+    public Uri? RefreshTokenEndpoint { get; set; }
+
+    /// <summary>
     /// Gateway 在 MySSO 平台使用的應用程式識別碼。
     /// </summary>
     public string? AppId { get; set; }
@@ -32,6 +37,16 @@ public sealed class MySsoAuthenticationConfiguration
     /// 前端啟動 MySSO 登入流程的 Gateway 路徑。
     /// </summary>
     public PathString LoginPath { get; set; } = MySsoAuthenticationDefaults.LoginPath;
+
+    /// <summary>
+    /// 前端查詢 MySSO session 狀態與到期時間的 Gateway 路徑。
+    /// </summary>
+    public PathString SessionPath { get; set; } = MySsoAuthenticationDefaults.SessionPath;
+
+    /// <summary>
+    /// 前端主動續期 access／refresh token 與 session 到期時間的 Gateway 路徑。
+    /// </summary>
+    public PathString RefreshPath { get; set; } = MySsoAuthenticationDefaults.RefreshPath;
 
     /// <summary>
     /// MySSO form POST 中承載單次 token 的欄位名稱。
@@ -87,6 +102,21 @@ public sealed class MySsoAuthenticationConfiguration
     /// MySSO session 的閒置逾時分鐘數。
     /// </summary>
     public int SessionIdleTimeoutMinutes { get; set; } = 30;
+
+    /// <summary>
+    /// 有操作（已驗證請求）時延長 session 閒置逾時的續期策略。
+    /// </summary>
+    public MySsoSessionRenewalMode SessionRenewalMode { get; set; } = MySsoSessionRenewalMode.Periodic;
+
+    /// <summary>
+    /// <see cref="MySsoSessionRenewalMode.Periodic"/> 模式下，距上次續期至少間隔多少秒才重新簽發。
+    /// </summary>
+    public int SessionRenewalIntervalSeconds { get; set; } = 60;
+
+    /// <summary>
+    /// 回應中承載 session 到期時間的 header 名稱。
+    /// </summary>
+    public string SessionExpiresHeaderName { get; set; } = MySsoAuthenticationDefaults.SessionExpiresHeaderName;
 
     /// <summary>
     /// 保存 MySSO authentication ticket 的 Redis 連線字串；未設定時 ticket 會存放在受保護的 Cookie。

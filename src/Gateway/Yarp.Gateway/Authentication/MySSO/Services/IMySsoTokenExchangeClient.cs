@@ -19,4 +19,16 @@ public interface IMySsoTokenExchangeClient
         string token,
         MySsoAuthenticationOptions options,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// 以 refresh token 向平台 Auth Server 換發新的平台權杖。
+    /// </summary>
+    /// <param name="refreshToken">先前保存在 session 中的 refresh token。</param>
+    /// <param name="options">MySSO remote authentication 執行期設定。</param>
+    /// <param name="cancellationToken">取消 backchannel request 的權杖。</param>
+    /// <returns>平台 Auth Server 回傳的續期結果。</returns>
+    Task<MySsoTokenExchangeResult> RefreshAsync(
+        string refreshToken,
+        MySsoAuthenticationOptions options,
+        CancellationToken cancellationToken);
 }

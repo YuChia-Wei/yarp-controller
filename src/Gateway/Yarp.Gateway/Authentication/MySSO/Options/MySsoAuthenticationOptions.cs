@@ -31,6 +31,11 @@ public sealed class MySsoAuthenticationOptions : RemoteAuthenticationOptions
     public Uri? TokenExchangeEndpoint { get; set; }
 
     /// <summary>
+    /// 平台 Auth Server 以 refresh token 換發新平台權杖的端點；供 /auth/refresh 使用，未設定時不提供主動續期。
+    /// </summary>
+    public Uri? RefreshTokenEndpoint { get; set; }
+
+    /// <summary>
     /// Gateway 在 MySSO 平台使用的應用程式識別碼。
     /// </summary>
     public string? AppId { get; set; }

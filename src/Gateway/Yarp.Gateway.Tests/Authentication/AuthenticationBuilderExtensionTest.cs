@@ -1,7 +1,10 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Xunit;
@@ -58,10 +61,31 @@ public class AuthenticationBuilderExtensionTest
         Assert.Equal(MySsoAuthenticationDefaults.SessionCookieName, options.SessionCookieName);
         Assert.Equal(30, options.SessionIdleTimeoutMinutes);
         Assert.False(options.AllowQueryStringCallback);
+        Assert.Equal(MySsoAuthenticationDefaults.SessionPath, options.SessionPath);
+        Assert.Equal(MySsoAuthenticationDefaults.RefreshPath, options.RefreshPath);
+        Assert.Equal(MySsoSessionRenewalMode.Periodic, options.SessionRenewalMode);
+        Assert.Equal(60, options.SessionRenewalIntervalSeconds);
+        Assert.Equal(MySsoAuthenticationDefaults.SessionExpiresHeaderName, options.SessionExpiresHeaderName);
     }
 
     [Fact]
-    public async Task AddYarpAuthentication_GivenMySsoOptions_ShouldUseSessionAndRemoteChallengeSchemes()
+    public void AddYarpAuthentication_GivenMySsoWithoutTicketStoreRedis_ThrowException()
+    {
+        var options = new GatewayAuthConfiguration
+        {
+            Default = DefaultAuthMethod.MySSO,
+            MySSO = new MySsoAuthenticationConfiguration
+            {
+                AuthorizationEndpoint = new Uri("https://mysso.example.test/login"),
+                TokenExchangeEndpoint = new Uri("https://platform-auth.example.test/mysso/exchange")
+            }
+        };
+
+        Assert.Throws<InvalidOperationException>(() => this._serviceCollection.AddYarpAuthentication(options));
+    }
+
+    [Fact]
+    public async Task AddYarpAuthentication_GivenMySsoOptions_ShouldUseSessionWithoutDefaultRemoteChallenge()
     {
         var options = new GatewayAuthConfiguration
         {
@@ -78,10 +102,44 @@ public class AuthenticationBuilderExtensionTest
             MySsoAuthenticationDefaults.SessionScheme,
             (await schemeProvider.GetDefaultAuthenticateSchemeAsync())?.Name);
         Assert.Equal(
-            MySsoAuthenticationDefaults.RemoteScheme,
+            MySsoAuthenticationDefaults.SessionScheme,
             (await schemeProvider.GetDefaultChallengeSchemeAsync())?.Name);
         Assert.NotNull(await schemeProvider.GetSchemeAsync(MySsoAuthenticationDefaults.RemoteScheme));
         Assert.NotNull(await schemeProvider.GetSchemeAsync(MySsoAuthenticationDefaults.SessionScheme));
+        Assert.NotNull(await schemeProvider.GetSchemeAsync(MySsoAuthenticationDefaults.InteractiveScheme));
+
+        var authorizationOptions = serviceProvider.GetRequiredService<IOptions<AuthorizationOptions>>().Value;
+        var interactivePolicy = authorizationOptions.GetPolicy(MySsoAuthenticationDefaults.InteractivePolicy);
+
+        Assert.NotNull(interactivePolicy);
+        Assert.Contains(MySsoAuthenticationDefaults.InteractiveScheme, interactivePolicy.AuthenticationSchemes);
+
+        var policySchemeOptions = serviceProvider
+                                  .GetRequiredService<IOptionsMonitor<PolicySchemeOptions>>()
+                                  .Get(MySsoAuthenticationDefaults.InteractiveScheme);
+        Assert.Equal(MySsoAuthenticationDefaults.SessionScheme, policySchemeOptions.ForwardAuthenticate);
+        Assert.Equal(MySsoAuthenticationDefaults.RemoteScheme, policySchemeOptions.ForwardChallenge);
+
+        var cookieOptions = serviceProvider
+                            .GetRequiredService<IOptionsMonitor<CookieAuthenticationOptions>>()
+                            .Get(MySsoAuthenticationDefaults.SessionScheme);
+        var httpContext = new DefaultHttpContext();
+        var redirectContext = new RedirectContext<CookieAuthenticationOptions>(
+            httpContext,
+            new AuthenticationScheme(
+                MySsoAuthenticationDefaults.SessionScheme,
+                null,
+                typeof(CookieAuthenticationHandler)),
+            cookieOptions,
+            new AuthenticationProperties(),
+            "/account/login");
+
+        await cookieOptions.Events.RedirectToLogin(redirectContext);
+
+        Assert.Equal(StatusCodes.Status401Unauthorized, httpContext.Response.StatusCode);
+        Assert.Contains(
+            httpContext.Response.Headers.SetCookie,
+            value => value?.StartsWith($"{MySsoAuthenticationDefaults.SessionCookieName}=", StringComparison.Ordinal) == true);
 
         var optionsMonitor = serviceProvider.GetRequiredService<IOptionsMonitor<MySsoAuthenticationOptions>>();
         var remoteOptions = optionsMonitor.Get(MySsoAuthenticationDefaults.RemoteScheme);
@@ -135,11 +193,12 @@ public class AuthenticationBuilderExtensionTest
             MySsoAuthenticationDefaults.PolicyScheme,
             (await schemeProvider.GetDefaultAuthenticateSchemeAsync())?.Name);
         Assert.Equal(
-            MySsoAuthenticationDefaults.RemoteScheme,
+            MySsoAuthenticationDefaults.PolicyScheme,
             (await schemeProvider.GetDefaultChallengeSchemeAsync())?.Name);
         Assert.NotNull(await schemeProvider.GetSchemeAsync(JwtBearerDefaults.AuthenticationScheme));
         Assert.NotNull(await schemeProvider.GetSchemeAsync(MySsoAuthenticationDefaults.RemoteScheme));
         Assert.NotNull(await schemeProvider.GetSchemeAsync(MySsoAuthenticationDefaults.SessionScheme));
+        Assert.NotNull(await schemeProvider.GetSchemeAsync(MySsoAuthenticationDefaults.InteractiveScheme));
         Assert.NotNull(await schemeProvider.GetSchemeAsync(ExternalTokenAuthenticationDefaults.AuthenticationScheme));
         Assert.NotNull(await schemeProvider.GetSchemeAsync(MySsoAuthenticationDefaults.PolicyScheme));
     }
@@ -164,7 +223,9 @@ public class AuthenticationBuilderExtensionTest
         return new MySsoAuthenticationConfiguration
         {
             AuthorizationEndpoint = new Uri("https://mysso.example.test/login"),
-            TokenExchangeEndpoint = new Uri("https://platform-auth.example.test/mysso/exchange")
+            TokenExchangeEndpoint = new Uri("https://platform-auth.example.test/mysso/exchange"),
+            RefreshTokenEndpoint = new Uri("https://platform-auth.example.test/mysso/refresh"),
+            TicketStoreRedisServer = "localhost:6379"
         };
     }
 }
