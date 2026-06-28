@@ -4,7 +4,7 @@
       "default-route": {
         "ClusterId": "default-cluster",
         "AuthorizationPolicy": "Default",
-        "CorsPolicy": "CorsPolicy",
+        "CorsPolicy": "AllowAllPolicy",
         "Match": {
           "Path": "{**catchall}"
         }
@@ -12,7 +12,7 @@
       "anonymous-route": {
         "ClusterId": "default-cluster",
         "AuthorizationPolicy": "Anonymous",
-        "CorsPolicy": "CorsPolicy",
+        "CorsPolicy": "AllowAllPolicy",
         "Match": {
           "Path": "/anonymous/{**catchall}"
         },

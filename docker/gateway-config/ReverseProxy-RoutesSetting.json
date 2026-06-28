@@ -4,7 +4,7 @@
       "httpbin-route": {
         "ClusterId": "httpbin-cluster",
         "AuthorizationPolicy": "Default",
-        "CorsPolicy": "CorsPolicy",
+        "CorsPolicy": "AllowAllPolicy",
         "Match": {
           "Path": "/httpbin/{**catchall}"
         },

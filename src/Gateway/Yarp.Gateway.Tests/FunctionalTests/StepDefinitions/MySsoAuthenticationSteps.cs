@@ -74,6 +74,14 @@ public sealed class MySsoAuthenticationSteps
         await this.SetResponseAsync(this.Application.Client.SendAsync(request));
     }
 
+    [When(@"來源 ""(.*)"" 的瀏覽器查詢 MySSO session")]
+    public async Task WhenBrowserFromOriginQueriesMySsoSession(string origin)
+    {
+        using var request = this.CreateSessionRequest(HttpMethod.Get, MySsoAuthenticationDefaults.SessionPath);
+        request.Headers.TryAddWithoutValidation("Origin", origin);
+        await this.SetResponseAsync(this.Application.Client.SendAsync(request));
+    }
+
     [When("瀏覽器要求更新 MySSO session")]
     public async Task WhenBrowserRefreshesMySsoSession()
     {
@@ -168,6 +176,21 @@ public sealed class MySsoAuthenticationSteps
     {
         Assert.True(this.Response.Headers.TryGetValues(MySsoAuthenticationDefaults.SessionExpiresHeaderName, out var values));
         Assert.True(DateTimeOffset.TryParse(values.Single(), out _));
+    }
+
+    [Then("CORS 回應應允許任意來源")]
+    public void ThenCorsResponseShouldAllowAnyOrigin()
+    {
+        Assert.Equal("*", this.Response.Headers.GetValues("Access-Control-Allow-Origin").Single());
+    }
+
+    [Then("CORS 回應應公開 session 到期 header")]
+    public void ThenCorsResponseShouldExposeSessionExpirationHeader()
+    {
+        var exposedHeaders = this.Response.Headers.GetValues("Access-Control-Expose-Headers");
+        Assert.Contains(
+            MySsoAuthenticationDefaults.SessionExpiresHeaderName,
+            exposedHeaders.SelectMany(value => value.Split(',', StringSplitOptions.TrimEntries)));
     }
 
     [Then(@"Auth Server 應收到既有 refresh token ""(.*)""")]

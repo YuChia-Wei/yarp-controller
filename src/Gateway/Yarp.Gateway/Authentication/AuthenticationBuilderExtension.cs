@@ -151,6 +151,8 @@ public static class AuthenticationBuilderExtension
                         if (expiresAt is not null)
                         {
                             context.HttpContext.Items[MySsoAuthenticationDefaults.SessionExpiresItemKey] = expiresAt;
+                            context.HttpContext.Response.Headers[authConfiguration.SessionExpiresHeaderName] =
+                                expiresAt.Value.ToString("O");
                         }
 
                         return Task.CompletedTask;

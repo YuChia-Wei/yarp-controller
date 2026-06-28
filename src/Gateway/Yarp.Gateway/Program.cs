@@ -25,22 +25,7 @@ builder.Configuration.AddYarpConfigurationJsons();
 
 var gatewayAuthConfiguration = GatewayAuthConfiguration.GatewayAuthSettingOptions(builder.Configuration);
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("CorsPolicy", corsPolicyBuilder =>
-    {
-        corsPolicyBuilder.AllowAnyOrigin()
-                         .AllowAnyHeader()
-                         .AllowAnyMethod();
-
-        // 讓前端（含跨網域 XHR/fetch）能讀取 session 到期時間 header。
-        var sessionExpiresHeader = gatewayAuthConfiguration?.MySSO?.SessionExpiresHeaderName;
-        if (!string.IsNullOrWhiteSpace(sessionExpiresHeader))
-        {
-            corsPolicyBuilder.WithExposedHeaders(sessionExpiresHeader);
-        }
-    });
-});
+builder.Services.AddGatewayCors(gatewayAuthConfiguration);
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
@@ -160,16 +145,13 @@ app.UseW3CLogging();
 
 app.UseRouting();
 
-app.UseCors("CorsPolicy");
+app.UseCors();
 
 app.UseAuthentication();
 
 app.UseAuthorization();
 
-if (gatewayAuthConfiguration?.MySSO is not null)
-{
-    app.UseMySsoAuthentication(gatewayAuthConfiguration.MySSO);
-}
+app.MapMySsoEndpoints(gatewayAuthConfiguration);
 
 app.MapGet("/gateway-config",
            [Authorize("GatewayManager")] ([FromServices] IProxyConfigProvider proxyConfig) =>

@@ -37,6 +37,13 @@ Feature: MySSO authentication
     And session 回應應顯示已驗證及 1800 秒閒置時間
     And 回應應包含 session 到期 header
 
+  Scenario: MySSO session 端點使用獨立 CORS policy
+    Given 使用者已完成 MySSO 登入
+    When 來源 "https://frontend.test" 的瀏覽器查詢 MySSO session
+    Then HTTP 狀態碼應為 200
+    And CORS 回應應允許任意來源
+    And CORS 回應應公開 session 到期 header
+
   Scenario: 已登入使用者主動更新平台權杖
     Given 使用者已完成 MySSO 登入
     When 瀏覽器要求更新 MySSO session

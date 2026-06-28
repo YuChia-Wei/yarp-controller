@@ -14,6 +14,7 @@ using Yarp.Gateway.Authentication.MySSO;
 using Yarp.Gateway.Authentication.MySSO.Configuration;
 using Yarp.Gateway.Authentication.MySSO.Services;
 using Yarp.Gateway.Authentication.Options;
+using Yarp.Gateway.Configuration;
 
 namespace Yarp.Gateway.Tests.FunctionalTests.Support;
 
@@ -51,6 +52,7 @@ internal sealed class GatewayTestApplication(WebApplication application, HttpCli
         builder.Services.AddAuthorization();
         builder.Services.AddDataProtection()
                .UseEphemeralDataProtectionProvider();
+        builder.Services.AddGatewayCors(gatewayAuth);
         builder.Services.AddSingleton<IMySsoTokenExchangeClient>(tokenExchangeClient);
         builder.Services.AddYarpAuthentication(gatewayAuth);
         builder.Services.PostConfigure<CookieAuthenticationOptions>(
@@ -59,9 +61,10 @@ internal sealed class GatewayTestApplication(WebApplication application, HttpCli
 
         var application = builder.Build();
         application.UseRouting();
+        application.UseCors();
         application.UseAuthentication();
         application.UseAuthorization();
-        application.UseMySsoAuthentication(mySso);
+        application.MapMySsoEndpoints(gatewayAuth);
 
         application.MapGet(
                        "/protected",
@@ -116,6 +119,7 @@ internal sealed class GatewayTestApplication(WebApplication application, HttpCli
         application.UseRouting();
         application.UseAuthentication();
         application.UseAuthorization();
+        application.MapMySsoEndpoints(gatewayAuth);
         application.MapGet(
                        "/external-protected",
                        (HttpContext context) => Results.Ok(new
