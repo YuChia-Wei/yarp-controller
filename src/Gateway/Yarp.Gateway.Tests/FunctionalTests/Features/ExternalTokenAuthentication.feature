@@ -9,6 +9,14 @@ Feature: External token authentication
     Then HTTP 狀態碼應為 200
     And 回應應包含外部使用者 id "external-user-001"
     And 外部驗證服務應收到 token "valid-external-token"
+    And 下游不應收到外部 access token
+
+  Scenario: 有效的外部 key 交換 access token 後轉送至下游
+    When 使用者以 ExternalKey "valid-external-key" 要求外部驗證路由
+    Then HTTP 狀態碼應為 200
+    And 回應應包含外部使用者 id "external-user-001"
+    And 外部驗證服務應收到 key "valid-external-key"
+    And 下游應收到外部 access token "access-token-from-key-exchange"
 
   Scenario: 無效的外部 token 被拒絕
     When 使用者以 ExternalToken "invalid-external-token" 要求外部驗證路由

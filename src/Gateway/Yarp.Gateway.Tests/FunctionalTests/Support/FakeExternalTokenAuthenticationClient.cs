@@ -6,7 +6,11 @@ namespace Yarp.Gateway.Tests.FunctionalTests.Support;
 
 internal sealed class FakeExternalTokenAuthenticationClient : IExternalTokenAuthenticationClient
 {
+    public int KeyExchangeCallCount { get; private set; }
+
     public int ValidationCallCount { get; private set; }
+
+    public string? LastExchangedKey { get; private set; }
 
     public string? LastValidatedToken { get; private set; }
 
@@ -15,7 +19,22 @@ internal sealed class FakeExternalTokenAuthenticationClient : IExternalTokenAuth
         ExternalTokenAuthenticationConfiguration options,
         CancellationToken cancellationToken)
     {
-        return Task.FromResult(ExternalTokenAuthenticationResult.Fail("External key is invalid."));
+        this.KeyExchangeCallCount++;
+        this.LastExchangedKey = key;
+
+        return Task.FromResult(
+            key == "valid-external-key"
+                ? new ExternalTokenAuthenticationResult
+                {
+                    Success = true,
+                    Id = "external-user-001",
+                    Name = "外部驗證使用者",
+                    Roles = ["Gateway-User"],
+                    AccessToken = "access-token-from-key-exchange",
+                    TokenType = "Bearer",
+                    ExpiresIn = 300
+                }
+                : ExternalTokenAuthenticationResult.Fail("External key is invalid."));
     }
 
     public Task<ExternalTokenAuthenticationResult> ValidateTokenAsync(
@@ -33,7 +52,8 @@ internal sealed class FakeExternalTokenAuthenticationClient : IExternalTokenAuth
                     Success = true,
                     Id = "external-user-001",
                     Name = "外部驗證使用者",
-                    Roles = ["Gateway-User"]
+                    Roles = ["Gateway-User"],
+                    AccessToken = "access-token-from-token-validation"
                 }
                 : ExternalTokenAuthenticationResult.Fail("External token is invalid."));
     }

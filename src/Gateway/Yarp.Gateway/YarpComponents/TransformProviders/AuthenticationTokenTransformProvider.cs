@@ -1,7 +1,4 @@
 using System.Net.Http.Headers;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using Microsoft.Net.Http.Headers;
 using Yarp.ReverseProxy.Transforms;
 using Yarp.ReverseProxy.Transforms.Builder;
 
@@ -36,23 +33,34 @@ internal class AuthenticationTokenTransformProvider : ITransformProvider
 
     private static async Task SetBearerTokenAsync(RequestTransformContext transformContext)
     {
-        if (transformContext.HttpContext.User.Identity?.IsAuthenticated ?? false)
+        if (!transformContext.HttpContext.User.Identities.Any(identity => identity.IsAuthenticated))
         {
-            var tokenAsync = await transformContext.HttpContext.GetTokenAsync(OpenIdConnectParameterNames.AccessToken);
-            if (!string.IsNullOrEmpty(tokenAsync))
-            {
-                transformContext.ProxyRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", tokenAsync);
-                return;
-            }
-
-            var authorization = transformContext.HttpContext.Request.Headers[HeaderNames.Authorization].FirstOrDefault();
-            if (!string.IsNullOrWhiteSpace(authorization) &&
-                AuthenticationHeaderValue.TryParse(authorization, out var authorizationHeader) &&
-                string.Equals(authorizationHeader.Scheme, "Bearer", StringComparison.OrdinalIgnoreCase) &&
-                !string.IsNullOrWhiteSpace(authorizationHeader.Parameter))
-            {
-                transformContext.ProxyRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authorizationHeader.Parameter);
-            }
+            return;
         }
+
+        var resolution = await DownstreamAccessTokenResolver
+                               .ResolveAsync(transformContext.HttpContext)
+                               .ConfigureAwait(false);
+        ApplyAuthorization(transformContext.ProxyRequest, resolution);
+    }
+
+    /// <summary>
+    /// 將 downstream token 解析結果套用至反向代理要求的 Authorization header。
+    /// </summary>
+    /// <param name="proxyRequest">即將傳送至下游服務的 HTTP 要求。</param>
+    /// <param name="resolution">downstream access token 解析結果。</param>
+    internal static void ApplyAuthorization(
+        HttpRequestMessage proxyRequest,
+        DownstreamAccessTokenResolution resolution)
+    {
+        if (!resolution.IsHandled)
+        {
+            return;
+        }
+
+        proxyRequest.Headers.Authorization =
+            resolution.AccessToken is null
+                ? null
+                : new AuthenticationHeaderValue("Bearer", resolution.AccessToken);
     }
 }

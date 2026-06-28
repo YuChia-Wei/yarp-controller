@@ -162,6 +162,13 @@ public sealed class MySsoAuthenticationSteps
         Assert.Equal(expectedAccessToken, json.RootElement.GetProperty("accessToken").GetString());
     }
 
+    [Then(@"下游應收到 access token ""(.*)""")]
+    public async Task ThenDownstreamShouldReceiveAccessToken(string expectedAccessToken)
+    {
+        using var json = await this.ReadJsonResponseAsync();
+        Assert.Equal(expectedAccessToken, json.RootElement.GetProperty("downstreamAccessToken").GetString());
+    }
+
     [Then(@"session 回應應顯示已驗證及 (\d+) 秒閒置時間")]
     public async Task ThenSessionResponseShouldContainAuthenticatedState(int expectedIdleTimeoutSeconds)
     {

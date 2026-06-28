@@ -112,17 +112,6 @@ public sealed class ExternalTokenAuthenticationResult
     }
 
     /// <summary>
-    /// 建立包含外部服務權杖資訊的 ASP.NET Core 驗證屬性。
-    /// </summary>
-    /// <returns>外部服務回傳的驗證屬性。</returns>
-    internal AuthenticationProperties CreateAuthenticationProperties()
-    {
-        var properties = new AuthenticationProperties();
-        this.StoreTokens(properties);
-        return properties;
-    }
-
-    /// <summary>
     /// 將外部服務回傳的權杖資訊保存至指定驗證屬性。
     /// </summary>
     /// <param name="properties">要保存權杖資訊的驗證屬性。</param>

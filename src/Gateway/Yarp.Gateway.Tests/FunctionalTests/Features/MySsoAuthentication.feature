@@ -29,6 +29,7 @@ Feature: MySSO authentication
     Then HTTP 狀態碼應為 200
     And 回應應包含 customer id "customer-001"
     And 回應應包含 access token "access-token-initial"
+    And 下游應收到 access token "access-token-initial"
 
   Scenario: 已登入使用者查詢 session 到期資訊
     Given 使用者已完成 MySSO 登入
@@ -52,6 +53,7 @@ Feature: MySSO authentication
     And 回應應建立 MySSO session Cookie
     When 瀏覽器使用 MySSO session Cookie 要求一般受保護路由
     Then 回應應包含 access token "access-token-refreshed"
+    And 下游應收到 access token "access-token-refreshed"
 
   Scenario: refresh token 更新失敗時強制登出
     Given 使用者已完成 MySSO 登入

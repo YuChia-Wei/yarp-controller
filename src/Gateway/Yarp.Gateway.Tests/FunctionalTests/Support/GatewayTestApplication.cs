@@ -15,6 +15,7 @@ using Yarp.Gateway.Authentication.MySSO.Configuration;
 using Yarp.Gateway.Authentication.MySSO.Services;
 using Yarp.Gateway.Authentication.Options;
 using Yarp.Gateway.Configuration;
+using Yarp.Gateway.YarpComponents.TransformProviders;
 
 namespace Yarp.Gateway.Tests.FunctionalTests.Support;
 
@@ -71,10 +72,12 @@ internal sealed class GatewayTestApplication(WebApplication application, HttpCli
                        async (HttpContext context) =>
                        {
                            var accessToken = await context.GetTokenAsync(OpenIdConnectParameterNames.AccessToken);
+                           var downstreamToken = await DownstreamAccessTokenResolver.ResolveAsync(context);
                            return Results.Ok(new
                            {
                                customerId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
-                               accessToken
+                               accessToken,
+                               downstreamAccessToken = downstreamToken.AccessToken
                            });
                        })
                    .RequireAuthorization();
@@ -122,10 +125,15 @@ internal sealed class GatewayTestApplication(WebApplication application, HttpCli
         application.MapMySsoEndpoints(gatewayAuth);
         application.MapGet(
                        "/external-protected",
-                       (HttpContext context) => Results.Ok(new
+                       async (HttpContext context) =>
                        {
-                           userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-                       }))
+                           var downstreamToken = await DownstreamAccessTokenResolver.ResolveAsync(context);
+                           return Results.Ok(new
+                           {
+                               userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
+                               downstreamAccessToken = downstreamToken.AccessToken
+                           });
+                       })
                    .RequireAuthorization();
 
         await application.StartAsync();

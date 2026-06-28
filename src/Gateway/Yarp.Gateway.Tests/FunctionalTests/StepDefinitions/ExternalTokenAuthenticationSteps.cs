@@ -28,6 +28,14 @@ public sealed class ExternalTokenAuthenticationSteps
         await this.SetResponseAsync(this.Application.Client.SendAsync(request));
     }
 
+    [When(@"使用者以 ExternalKey ""(.*)"" 要求外部驗證路由")]
+    public async Task WhenUserRequestsRouteWithExternalKey(string key)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/external-protected");
+        request.Headers.TryAddWithoutValidation("Authorization", $"ExternalKey {key}");
+        await this.SetResponseAsync(this.Application.Client.SendAsync(request));
+    }
+
     [When("使用者以 JWT-shaped Bearer token 要求外部驗證路由")]
     public async Task WhenUserRequestsRouteWithJwtShapedBearerToken()
     {
@@ -55,6 +63,29 @@ public sealed class ExternalTokenAuthenticationSteps
     {
         Assert.Equal(1, this._authenticationClient.ValidationCallCount);
         Assert.Equal(expectedToken, this._authenticationClient.LastValidatedToken);
+    }
+
+    [Then(@"外部驗證服務應收到 key ""(.*)""")]
+    public void ThenExternalServiceShouldReceiveKey(string expectedKey)
+    {
+        Assert.Equal(1, this._authenticationClient.KeyExchangeCallCount);
+        Assert.Equal(expectedKey, this._authenticationClient.LastExchangedKey);
+    }
+
+    [Then(@"下游應收到外部 access token ""(.*)""")]
+    public async Task ThenDownstreamShouldReceiveExternalAccessToken(string expectedAccessToken)
+    {
+        var content = await this.Response.Content.ReadAsStringAsync();
+        using var json = JsonDocument.Parse(content);
+        Assert.Equal(expectedAccessToken, json.RootElement.GetProperty("downstreamAccessToken").GetString());
+    }
+
+    [Then("下游不應收到外部 access token")]
+    public async Task ThenDownstreamShouldNotReceiveExternalAccessToken()
+    {
+        var content = await this.Response.Content.ReadAsStringAsync();
+        using var json = JsonDocument.Parse(content);
+        Assert.Equal(JsonValueKind.Null, json.RootElement.GetProperty("downstreamAccessToken").ValueKind);
     }
 
     [Then("外部驗證服務不應被呼叫")]

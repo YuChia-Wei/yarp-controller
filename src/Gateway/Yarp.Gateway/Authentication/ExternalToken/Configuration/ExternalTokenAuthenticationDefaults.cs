@@ -19,4 +19,19 @@ public static class ExternalTokenAuthenticationDefaults
     /// 呼叫外部驗證服務時使用的具名 HttpClient 名稱。
     /// </summary>
     public const string BackchannelHttpClientName = "ExternalTokenAuthentication";
+
+    /// <summary>
+    /// Authentication properties 中記錄外部憑證型態的鍵值。
+    /// </summary>
+    internal const string CredentialKindProperty = "ExternalToken:CredentialKind";
+
+    /// <summary>
+    /// 代表 authentication ticket 由外部 key 交換建立的值。
+    /// </summary>
+    internal const string KeyCredentialKind = "key";
+
+    /// <summary>
+    /// 代表 authentication ticket 由外部 token 驗證建立的值。
+    /// </summary>
+    internal const string TokenCredentialKind = "token";
 }

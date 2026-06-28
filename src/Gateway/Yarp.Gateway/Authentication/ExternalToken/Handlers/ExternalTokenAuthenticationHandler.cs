@@ -3,6 +3,7 @@ using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
+using Yarp.Gateway.Authentication.ExternalToken.Configuration;
 using Yarp.Gateway.Authentication.ExternalToken.Models;
 using Yarp.Gateway.Authentication.ExternalToken.Services;
 using Yarp.Gateway.Authentication.Options;
@@ -65,10 +66,22 @@ internal sealed class ExternalTokenAuthenticationHandler(
             return AuthenticateResult.Fail(authResult.ErrorMessage ?? "External token is invalid.");
         }
 
+        var authenticationProperties = new AuthenticationProperties();
+        authenticationProperties.Items[ExternalTokenAuthenticationDefaults.CredentialKindProperty] =
+            credential.Kind == ExternalTokenCredentialKind.Key
+                ? ExternalTokenAuthenticationDefaults.KeyCredentialKind
+                : ExternalTokenAuthenticationDefaults.TokenCredentialKind;
+
+        // 只有 key exchange 取得的 access token 可以交給下游服務；單純驗證 token 時不保存外部回應中的權杖。
+        if (credential.Kind == ExternalTokenCredentialKind.Key)
+        {
+            authResult.StoreTokens(authenticationProperties);
+        }
+
         return AuthenticateResult.Success(
             new AuthenticationTicket(
                 authResult.CreatePrincipal(this.Scheme.Name),
-                authResult.CreateAuthenticationProperties(),
+                authenticationProperties,
                 this.Scheme.Name));
     }
 
